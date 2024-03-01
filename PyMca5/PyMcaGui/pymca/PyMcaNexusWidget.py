@@ -45,6 +45,7 @@ _logger = logging.getLogger(__name__)
 
 class PyMcaNexusWidget(QNexusWidget.QNexusWidget):
     def __init__(self, parent=None, mca=True):
+        print("PyMcaNexusWidget")
         QNexusWidget.QNexusWidget.__init__(self, parent=parent, mca=mca)
 
     def itemRightClickedSlot(self, ddict):
@@ -247,3 +248,7 @@ if __name__ == "__main__":
     w.sigRemoveSelection.connect(removeSelection)
     w.sigReplaceSelection.connect(replaceSelection)
     sys.exit(app.exec())
+
+
+class PyMcaTiledWidget(PyMcaNexusWidget):
+    pass

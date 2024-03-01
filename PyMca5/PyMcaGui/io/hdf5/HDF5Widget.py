@@ -77,6 +77,7 @@ else:
 
 QVERSION = qt.qVersion()
 
+from PyMca5.PyMcaCore.TiledToools import TiledAdaptor
 
 #sorting method
 def h5py_sorting(object_list, sorting_list=None):
@@ -219,7 +220,10 @@ class RootItem(object):
         return len(self.children)
 
     def appendChild(self, item):
-        self.children.append(H5FileProxy(item, self))
+        if isinstance(item,TiledAdaptor):
+            self.children.append(TiledProxy(item, self))
+        else:
+            self.children.append(H5FileProxy(item, self))
         self._identifiers.append(id(item))
 
     def deleteChild(self, child):
@@ -512,6 +516,7 @@ class FileModel(qt.QAbstractItemModel):
             if role == qt.Qt.DisplayRole:
                 item = self.getProxyFromIndex(index)
                 column = index.column()
+                print("HDF5Widget,data ", column, item )
                 if column == 0:
                     if isinstance(item, H5FileProxy):
                         try:
@@ -1131,3 +1136,16 @@ if __name__ == "__main__":
     ret = app.exec()
     app = None
     sys.exit(ret)
+
+class TiledNodeProxy(H5NodeProxy):
+    pass
+
+
+class TiledProxy(TiledNodeProxy):
+
+
+    def __init__(self, ffile, parent=None):
+        super(TiledNodeProxy, self).__init__(ffile, ffile, parent)
+        self._name = ffile.name
+        self._filename = self.file.name
+   

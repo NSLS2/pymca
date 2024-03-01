@@ -247,6 +247,7 @@ class QDispatcher(qt.QWidget):
         self.sigOtherSignals.emit(ddict)
 
     def _sourceSelectorSlot(self, ddict):
+        print("_sourceSelectorSlot",ddict)
         _logger.debug("_sourceSelectorSlot(self, ddict)")
         _logger.debug("ddict = %s", ddict)
         if ddict["event"] == "NewSourceSelected":

@@ -75,6 +75,10 @@ if NEXUS:
     source_types[NexusDataSource.SOURCE_TYPE] = NexusDataSource.NexusDataSource
     source_widgets[NexusDataSource.SOURCE_TYPE] = PyMcaNexusWidget.PyMcaNexusWidget
 
+from PyMca5.PyMcaCore import TiledDataSource
+source_types[TiledDataSource.SOURCE_TYPE] = TiledDataSource.TiledDataSource
+source_widgets[TiledDataSource.SOURCE_TYPE] = PyMcaNexusWidget.PyMcaTiledWidget
+
 def getSourceType(sourceName0):
     if type(sourceName0) == type([]):
         sourceName = sourceName0[0]
@@ -84,6 +88,9 @@ def getSourceType(sourceName0):
     if BlissSpecFile.isBlissSpecFile(sourceName):
         # wrapped as SpecFile
         return SpecFileDataSource.SOURCE_TYPE
+    
+    if TiledDataSource.isTiledDataSource(sourceName):
+        return TiledDataSource.SOURCE_TYPE
     
     if sps is not None:
         if sourceName in sps.getspeclist():
