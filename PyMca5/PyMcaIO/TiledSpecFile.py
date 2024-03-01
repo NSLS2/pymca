@@ -42,7 +42,7 @@ import logging
 _logger = logging.getLogger(__name__)
 
 
-import PyMca5.PyMcaCore.TiledTools as TiledTools
+import PyMca5.PyMcaCore.TiledToools as TiledTools
 HAS_REDIS = True
 
 
@@ -54,18 +54,16 @@ class TiledSpecFile(object):
         """
         filename is the name of the bliss session
         """
-        raise NotImplementedError("TiledSpecFile.__init__")
-        if not HAS_REDIS:
-            raise ImportError("Could not import RedisTools")
-        if filename not in redis.get_sessions_list():
-            raise IOError("Session <%s> not available" % filename)
+        self._tiledClient = TiledTools.get_tiled_connection()
+
         self._scan_nodes = []
-        self._session = filename
-        self._filename = redis.get_session_filename(self._session)
-        self._scan_nodes = redis.get_session_scan_list(self._session,
-                                                  self._filename)
+        #self._session = filename
+        #Fixme: rename _filename to something like scope
+        self._tiledScope = self._tiledClient["fxi"]["raw"] #FIXME
+        # self._keys = [ list(self._filename .keys().head(10))]
+
         if len(self._scan_nodes) > nscans:
-            self._scan_nodes = self._scan_nodes[-10:]
+            self._scan_nodes = self._scan_nodes[-nscans:]
         self.list()
         self.__lastTime = 0
         self.__lastKey = "0.0"
@@ -75,8 +73,12 @@ class TiledSpecFile(object):
         Return a string with all the scan keys separated by ,
         """
         _logger.debug("list method called")
-        raise NotImplementedError("TiledSpecFile.list")
-        scanlist = ["%s" % scan.name.split("_")[0] for scan in self._scan_nodes]
+
+        #fixme: not clear if this have to be numbers
+        return ",".join([str(x)+": "+self._tiledScope.keys()[-x] for x in range(1,11)])
+
+
+        scanlist = list(self._tiledClient[self._filename].keys())
         self._list = ["%s.1" % idx for idx in scanlist]
         return ",".join(scanlist)
 
@@ -373,7 +375,7 @@ class TiledSpecScan(object):
 
 def isTiledSpecFile(filename):
     print("is Tiled")
-    retrun True 
+    return True 
     #Fixme ... whatever logic is needed here....
 
 def test(filename):

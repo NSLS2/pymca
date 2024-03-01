@@ -2759,6 +2759,44 @@ unselected = [
 "XXXXXXXXXXXXXXXX"
 ]
 
+bluesky = [
+"32 32 2 1 ",
+"  c None",
+"B c #87CEEB",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"             BBBBBBB            ",
+"          BBBBBBBBBBBBBB        ",
+"       BBBBBBBBBBBBBBBBBB       ",
+"   BBBBBBBBBBBBBBBBBBB BBB      ",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBBBB ",
+"  BBBBBBBBBBBBBBBBBBBB  BBBB  BB",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBB BB",
+"   BBBBBBBBBBBBBBBBBBBB BBBB BB ",
+"     BBBBBBBBBBBBBBBBBBBBBBBBB  ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+]
+
 bliss = [
 "24 24 47 1 ",
 "  c None",
@@ -3657,7 +3695,8 @@ IconDict0 = {
     "vertical": vertical,
     "diagonal": diagonal,
     "rotate_left": rotate_left,
-    "rotate_right": rotate_right
+    "rotate_right": rotate_right,
+    "bluesky": bluesky
 }
 
 # corresponding silx icons

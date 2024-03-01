@@ -778,7 +778,7 @@ class SpecFileDataSource(object):
         cnts_idx = scan_array.shape[0]
         return (mot1_idx, mot2_idx, cnts_idx)
 
-    def __getScanMotorRange(self, info, obj):
+    def __getScanMotorRange(self, info, obj): 
         name = info["LabelNames"][0]
         values = obj.datacol(1)
         length = values.shape[0]

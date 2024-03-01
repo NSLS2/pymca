@@ -47,6 +47,8 @@ if sys.version_info > (3, 5):
     except Exception:
         _logger.info("Bliss data file direct support not available")
 
+#FIXME: Find a way to toggle bluesky button, e.g. via env var
+TILED=True
 
 class QSourceSelector(qt.QWidget):
     sigSourceSelectorSignal = qt.pyqtSignal(object)
@@ -82,7 +84,9 @@ class QSourceSelector(qt.QWidget):
         self.openIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["fileopen"]))
         self.closeIcon  = qt.QIcon(qt.QPixmap(icons.IconDict["close"]))
         self.reloadIcon = qt.QIcon(qt.QPixmap(icons.IconDict["reload"]))
-        if BLISS:
+        if TILED:
+            self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["bluesky"]))
+        elif BLISS:
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["bliss"]))
         else:
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["spec"]))
@@ -101,7 +105,7 @@ class QSourceSelector(qt.QWidget):
 
         specButton= qt.QPushButton(self.fileWidget)
         specButton.setIcon(self.specIcon)
-        if BLISS:
+        if BLISS or TILED:
             specButton.setToolTip("Open data acquisition source")
         else:
             specButton.setToolTip("Open new shared memory source")
@@ -158,6 +162,9 @@ class QSourceSelector(qt.QWidget):
                 specsession=True
             elif BLISS and sourcename in RedisTools.get_sessions_list():
                 specsession = "bliss"
+            elif TILED:
+                print("some message on openSource for tiled")
+                return #FIXME: remove return once butens are working
             else:
                 specsession=False
         self.openFile(sourcename, specsession=specsession)
@@ -190,6 +197,12 @@ class QSourceSelector(qt.QWidget):
             key = "%s" % session
             self._emitSourceSelectedOrReloaded([session], key)
             return
+        if specsession == "tiled":
+            #FIXME nothing really done here yet.
+            print("get into tiled")
+            filename =  "generated"
+            key = "raw" #FIXME not taken into account 
+            self._emitSourceSelectedOrReloaded(filename, key)
         if not specsession:
             if justloaded is None:
                 justloaded = True
@@ -288,7 +301,10 @@ class QSourceSelector(qt.QWidget):
 
     def openBlissOrSpec(self):
         if not BLISS:
-            return self.openSpec()
+            if TILED:    #FIXME: make the if statement nicer
+                return self.openFile("https://tiled-demo.blueskyproject.io", specsession="tiled")
+            else:
+                return self.openSpec()
         sessionList = RedisTools.get_sessions_list()
         if not len(sessionList):
             return self.openSpec()

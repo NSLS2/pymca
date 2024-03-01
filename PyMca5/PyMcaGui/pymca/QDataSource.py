@@ -41,8 +41,10 @@ from PyMca5.PyMcaCore import EdfFileDataSource
 from PyMca5.PyMcaIO import BlissSpecFile
 from PyMca5.PyMcaGui.io import QEdfFileWidget
 from PyMca5.PyMcaGui.io import QSpecFileWidget
+from PyMca5.PyMcaIO import TiledSpecFile
 
 if sys.platform == "win32":
+
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource}
 
@@ -82,6 +84,10 @@ def getSourceType(sourceName0):
         sourceName = sourceName0
 
     if BlissSpecFile.isBlissSpecFile(sourceName):
+        # wrapped as SpecFile
+        return SpecFileDataSource.SOURCE_TYPE
+    
+    if TiledSpecFile.isTiledSpecFile(sourceName):
         # wrapped as SpecFile
         return SpecFileDataSource.SOURCE_TYPE
     
