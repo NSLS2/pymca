@@ -46,6 +46,7 @@ if "hdf5plugin" not in sys.modules:
         _logger.info("Cannot import hdf5plugin")
 import h5py
 import weakref
+from tiled.client.container import Container as TiledContainer
 
 try:
     from silx.io import is_group
@@ -322,6 +323,7 @@ class H5NodeProxy(object):
     def row(self):
         if 1:#with self.file.plock:
             try:
+                print ("ROW",self.name,self.parent.children.index(self))
                 return self.parent.children.index(self)
             except ValueError:
                 return
@@ -365,6 +367,7 @@ class H5NodeProxy(object):
         self.__sorting = False
         self.__sorting_list = None
         self.__sorting_order = qt.Qt.AscendingOrder
+        print("parent",parent, path)
         if 1:#with ffile.plock:
             self._file = ffile
             self._parent = parent
@@ -516,7 +519,6 @@ class FileModel(qt.QAbstractItemModel):
             if role == qt.Qt.DisplayRole:
                 item = self.getProxyFromIndex(index)
                 column = index.column()
-                print("HDF5Widget,data ", column, item )
                 if column == 0:
                     if isinstance(item, H5FileProxy):
                         try:
@@ -524,6 +526,8 @@ class FileModel(qt.QAbstractItemModel):
                         except Exception:
                             _logger.critical("Cannot retrieve file name")
                             return MyQVariant("Unknown file. Please refresh")
+                    if isinstance(item,TiledProxy):
+                        return MyQVariant("TiledProxy")
                     else:
                         if hasattr(item, "name"):
                             return MyQVariant(posixpath.basename(item.name))
@@ -531,6 +535,11 @@ class FileModel(qt.QAbstractItemModel):
                             # this can only happen with the root
                             return MyQVariant("/")
                 if column == 1:
+                    print("get to coulum 1", item)
+
+                    if isinstance(item, TiledProxy):
+                        return MyQVariant("%s" % [1,2,3])
+
                     showtitle = True
                     if showtitle:
                         if hasattr(item, 'type'):
@@ -588,6 +597,7 @@ class FileModel(qt.QAbstractItemModel):
             return None
 
     def getProxyFromIndex(self, index):
+        print("getProxyFromIndex",index)
         try:
             return self._idMap[index.internalId()]
         except KeyError:
@@ -1137,15 +1147,161 @@ if __name__ == "__main__":
     app = None
     sys.exit(ret)
 
-class TiledNodeProxy(H5NodeProxy):
-    pass
+def is_tiled_group(node):
+    print("is_tiled_group")
+    return isinstance(node, TiledContainer) and len(node.keys())>0
 
+class TiledNodeProxy(object):
+    def __init__(self, ffile, name, parent=None, path=None):
+        print("TiledNodeProxy", name, parent, path )
+        self.__sorting = False
+        self.__sorting_list = None
+        self.__sorting_order = qt.Qt.AscendingOrder
+        self._file = ffile   #adaptor
+        self._parent = parent
+        self._name = name
+        self._node = self.getNode(name)
+        self._type = type(self._node)
+        self._hasChildren = is_tiled_group(self._node)
+        self._color = qt.QColor(qt.Qt.black)
+
+    @property
+    def node(self):
+        return self._node
+
+    def sortChildren(self, column, order):
+        print("sortChildren")
+        return
+
+    def raw_keys(self):
+        print("raw_keys")
+        return self.node.keys()
+
+    def raw_values(self):
+        print("raw_values")
+        return self.node.values()
+
+    def raw_items(self):
+        print("raw_items")
+        return self.node.items()
+
+    @property
+    def children(self):
+        print("children")
+        if not self.hasChildren:
+            return []
+        elif self.name == "":
+            return [TiledNodeProxy(self._file, x, self, None) for x in self.getNode().keys()]
+
+        else:
+            return [TiledNodeProxy(self._file, self.name+"/"+x, self, None) for x in self.getNode().keys()]
+
+    @property
+    def file(self):
+        print("file")
+        return self._file
+
+    @property
+    def hasChildren(self):
+        print("hasChildren", self.name, self._hasChildren)
+        return self._hasChildren
+
+    @property
+    def name(self):
+        print("NAME", self._name)
+        return self._name
+
+    @property
+    def row(self):
+        print("row", self.name)
+        return 0
+        return self.name
+    
+    @property
+    def type(self):
+        print("type")
+        return self._type
+
+    @property
+    def shape(self):
+        print("shape")
+        if hasattr(self.node,"shape"):
+            return self.node.shape
+        else:
+            return ""
+        
+    @property
+    def dtype(self):
+        print("dtype")
+        if hasattr(self.node,"dtype"):
+            return self.node.dtype
+        else:
+            return ""
+
+    @property
+    def parent(self):
+        print("parent", self.name, self._parent)
+        return self._parent
+
+    #@property
+    #def attrs(self):
+    #    return self._attrs
+
+    @property
+    def color(self):
+        return self._color
+
+    def clearChildren(self):
+        self._hasChildren=False
+
+    def getNode(self, name=None):
+        #this should return a tiled object ... see how name is used
+
+        #FIXME to be done more efficient
+        def get_nested_value(d, keys):
+            for k in keys:
+                d = d[k]
+            return d
+
+        if not name:
+            name = self.name
+        elif name == "/":
+            name = ''
+
+        print ("========name >", name,"<")
+        try:
+            return get_nested_value(self.file.client,name.split("/"))
+        except Exception:
+            _logger.critical("Cannot access TILED path <%s>" % name)
+            return
+
+    def __len__(self):
+        return len(self.node)
 
 class TiledProxy(TiledNodeProxy):
 
-
     def __init__(self, ffile, parent=None):
-        super(TiledNodeProxy, self).__init__(ffile, ffile, parent)
-        self._name = ffile.name
-        self._filename = self.file.name
+        print("TiledProxy", ffile, parent )
+        super().__init__(ffile, "", parent=parent)
+
+    @property
+    def name(self):
+        print("TiledProxy name")
+        return ''
+
+    @property
+    def filename(self):
+        print("TiledProxy filename")
+        return "Tiled"
+
+    def close(self):
+       print("TiledProxy close")
+       return
+
+    #def __getitem__(self, path):
+    #    print("TiledProxy get itme")
+    #    if path == '/' or path == "" or path == None:
+    #        return self
+    #    else:
+    #        return TiledNodeProxy(self.file, path, self)
    

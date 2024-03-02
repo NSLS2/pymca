@@ -9,7 +9,12 @@ class TiledAdaptor(object):
         print("init TiledAdaptor",host)
         self._client = from_uri(host)
         self.__sourceName=''
+        self.__prefixed=prefix
         print(self._client)
+
+    @property
+    def client(self):
+        return self._client
     
     @property
     def _sourceName(self):
@@ -30,7 +35,7 @@ class TiledAdaptor(object):
         n1 is the source number and n2 entry number in file both starting at 1.
         """
         print("TiledAdaptor getSourceInfo")
-        return {}
+        return {"KeyList":["1.1"]}
     
     @property
     def name(self):
