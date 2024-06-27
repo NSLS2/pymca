@@ -24,6 +24,7 @@ class TiledAdaptor(object):
         
         #specific hack for shen beamtime
         if host=="opls":
+            self._client = self._client["opls", "raw"]
             #specific hack for shen beamtime, just to reduce the scope
             from tiled.queries import FullText
             #self._client = self._client.search(TimeRange(since='2024-03-02 01:00', until='2024-03-02 02:00'))
