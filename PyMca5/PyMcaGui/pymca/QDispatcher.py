@@ -33,7 +33,7 @@ import logging
 from PyMca5.PyMcaGui import PyMcaQt as qt
 QTVERSION = qt.qVersion()
 from PyMca5.PyMcaGui.io import QSourceSelector
-from . import QDataSource
+from PyMca5.PyMcaGui.pymca import QDataSource
 #import weakref
 
 _logger = logging.getLogger(__name__)
