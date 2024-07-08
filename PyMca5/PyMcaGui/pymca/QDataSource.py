@@ -75,6 +75,17 @@ if NEXUS:
     source_types[NexusDataSource.SOURCE_TYPE] = NexusDataSource.NexusDataSource
     source_widgets[NexusDataSource.SOURCE_TYPE] = PyMcaNexusWidget.PyMcaNexusWidget
 
+Tiled = True
+try:
+    from PyMca5.PyMcaCore import TiledDataSource
+    from PyMca5.PyMcaGui.io import QTiledWidget
+except Exception:
+    Tiled = False
+
+if Tiled:
+    source_types[TiledDataSource.SOURCE_TYPE] = TiledDataSource.TiledDataSource
+    source_widgets[TiledDataSource.SOURCE_TYPE] = QTiledWidget.TiledBrowser
+
 def getSourceType(sourceName0):
     if type(sourceName0) == type([]):
         sourceName = sourceName0[0]
