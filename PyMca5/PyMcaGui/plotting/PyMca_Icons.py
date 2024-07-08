@@ -3585,6 +3585,44 @@ file_save = ["22 22 5 1",
 "..##################..",
 "......................"]
 
+bluesky = [
+"32 32 2 1 ",
+"  c None",
+"B c #87CEEB",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"             BBBBBBB            ",
+"             BBBBBBB            ",
+"          BBBBBBBBBBBBBB        ",
+"          BBBBBBBBBBBBBB        ",
+"       BBBBBBBBBBBBBBBBBB       ",
+"   BBBBBBBBBBBBBBBBBBB BBB      ",
+"   BBBBBBBBBBBBBBBBBBB BBB      ",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBBBB ",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBBBB ",
+"  BBBBBBBBBBBBBBBBBBBB  BBBB  BB",
+"  BBBBBBBBBBBBBBBBBBBB  BBBB  BB",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBB BB",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBB BB",
+"   BBBBBBBBBBBBBBBBBBBB BBBB BB ",
+"   BBBBBBBBBBBBBBBBBBBB BBBB BB ",
+"     BBBBBBBBBBBBBBBBBBBBBBBBB  ",
+"     BBBBBBBBBBBBBBBBBBBBBBBBB  ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+]
+
 
 
 IconDict0 = {
@@ -3597,6 +3635,7 @@ IconDict0 = {
     "fileprint": image_print_data,
     "spec": spec,
     "bliss": bliss,
+    "bluesky": bluesky,
     "normal": normal,
     "normalize16": normalize16,
     "reload": reload_,
@@ -3825,7 +3864,9 @@ class _PatchedIconDict(MutableMapping):
 
 
 IconDict = _PatchedIconDict(IconDict0)
-
+print(f"ID: {id(IconDict)}")
+for key in IconDict.keys():
+    print(key)
 
 def change_icons(plot):
     """Replace some of the silx icons with PyMca icons.
@@ -3863,12 +3904,12 @@ def showIcons():
     w.show()
     return w
 
-if __name__ == '__main__':
-    from PyMca5.PyMcaGui import PyMcaQt as qt
-    app = qt.QApplication(sys.argv)
-    app.lastWindowClosed.connect(app.quit)
-    logging.basicConfig()
-    _logger.setLevel(logging.DEBUG)
-    w = showIcons()
-    app.exec()
-    app = None
+#if __name__ == '__main__':
+#    from PyMca5.PyMcaGui import PyMcaQt as qt
+#    app = qt.QApplication(sys.argv)
+#    app.lastWindowClosed.connect(app.quit)
+#    logging.basicConfig()
+#    _logger.setLevel(logging.DEBUG)
+#    w = showIcons()
+#    app.exec()
+#    app = None
