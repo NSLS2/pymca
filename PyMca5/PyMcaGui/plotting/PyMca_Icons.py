@@ -3864,9 +3864,6 @@ class _PatchedIconDict(MutableMapping):
 
 
 IconDict = _PatchedIconDict(IconDict0)
-print(f"ID: {id(IconDict)}")
-for key in IconDict.keys():
-    print(key)
 
 def change_icons(plot):
     """Replace some of the silx icons with PyMca icons.

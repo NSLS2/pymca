@@ -86,7 +86,7 @@ class QSourceSelector(qt.QWidget):
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["bliss"]))
         else:
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["spec"]))
-        self.tiledIcon = qt.QIcon(qt.QPixmap(icons.IconDict["bliss"]))
+        self.tiledIcon = qt.QIcon(qt.QPixmap(icons.IconDict["bluesky"]))
 
         openButton.setIcon(self.openIcon)
         openButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
@@ -341,9 +341,8 @@ class QSourceSelector(qt.QWidget):
         menu.exec(self.cursor().pos())
 
     def _tiledConnection(self):
-        print(f"ID: {id(icons.IconDict)}")
-        for key in icons.IconDict.keys():
-            print(key)
+        # TODO: Add connectivity to Tiled Tab
+        pass
 
     def _fileSelection(self, qstring):
         _logger.debug("file selected %s", qstring)
