@@ -341,8 +341,11 @@ class QSourceSelector(qt.QWidget):
         menu.exec(self.cursor().pos())
 
     def tiledConnection(self):
+        """When 'bluesky' icon clicked it opens the TiledBrowser in the Tiled Tab"""
         ddict = {"event": "Open Tiled Tab"}
         self.sigSourceSelectorSignal.emit(ddict)
+
+        # Potentially add a authorization window when clicked
 
     def _fileSelection(self, qstring):
         _logger.debug("file selected %s", qstring)
