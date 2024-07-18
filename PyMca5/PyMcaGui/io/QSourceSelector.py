@@ -127,7 +127,7 @@ class QSourceSelector(qt.QWidget):
             _logger.debug("Using deprecated signal")
             self.fileCombo.activated[str].connect(self._fileSelection)
 
-        tiledButton.clicked.connect(self._tiledConnection)
+        tiledButton.clicked.connect(self.tiledConnection)
 
         fileWidgetLayout.addWidget(self.fileCombo)
         fileWidgetLayout.addWidget(openButton)
@@ -340,9 +340,9 @@ class QSourceSelector(qt.QWidget):
                         lambda i=spec:self.openFile(i, specsession=True))
         menu.exec(self.cursor().pos())
 
-    def _tiledConnection(self):
-        # TODO: Add connectivity to Tiled Tab
-        pass
+    def tiledConnection(self):
+        ddict = {"event": "Open Tiled Tab"}
+        self.sigSourceSelectorSignal.emit(ddict)
 
     def _fileSelection(self, qstring):
         _logger.debug("file selected %s", qstring)

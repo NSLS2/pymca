@@ -38,9 +38,11 @@ QTVERSION = qt.qVersion()
 
 from PyMca5.PyMcaCore import SpecFileDataSource
 from PyMca5.PyMcaCore import EdfFileDataSource
+from PyMca5.PyMcaCore import TiledDataSource
 from PyMca5.PyMcaIO import BlissSpecFile
 from PyMca5.PyMcaGui.io import QEdfFileWidget
 from PyMca5.PyMcaGui.io import QSpecFileWidget
+from PyMca5.PyMcaGui.io import QTiledWidget
 
 if sys.platform == "win32":
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
@@ -55,11 +57,13 @@ else:
     from PyMca5.PyMcaGui.io import QSpsWidget
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource,
-                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource}
+                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource,
+                     TiledDataSource.SOURCE_TYPE: TiledDataSource.TiledDataSource}
 
     source_widgets = { SpecFileDataSource.SOURCE_TYPE: QSpecFileWidget.QSpecFileWidget,
                        EdfFileDataSource.SOURCE_TYPE: QEdfFileWidget.QEdfFileWidget,
-                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget}
+                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget,
+                       TiledDataSource.SOURCE_TYPE: QTiledWidget.TiledBrowser}
 
 NEXUS = True
 try:
@@ -74,17 +78,6 @@ except Exception:
 if NEXUS:
     source_types[NexusDataSource.SOURCE_TYPE] = NexusDataSource.NexusDataSource
     source_widgets[NexusDataSource.SOURCE_TYPE] = PyMcaNexusWidget.PyMcaNexusWidget
-
-Tiled = True
-try:
-    from PyMca5.PyMcaCore import TiledDataSource
-    from PyMca5.PyMcaGui.io import QTiledWidget
-except Exception:
-    Tiled = False
-
-if Tiled:
-    source_types[TiledDataSource.SOURCE_TYPE] = TiledDataSource.TiledDataSource
-    source_widgets[TiledDataSource.SOURCE_TYPE] = QTiledWidget.TiledBrowser
 
 def getSourceType(sourceName0):
     if type(sourceName0) == type([]):

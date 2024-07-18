@@ -55,10 +55,12 @@ class TiledBrowser(qt.QMainWindow):
     NODE_ID_MAXLEN = 8
     SUPPORTED_TYPES = (StructureFamily.array, StructureFamily.container)
 
-    # your QWidget.__init__ can optionally request the napari viewer instance
-    # in one of two ways:
-    # 1. use a parameter called `napari_viewer`, as done here
-    # 2. use a type annotation of 'napari.viewer.Viewer' for any parameter
+    # Added to have 'Tiled' tab appear in QDispatcher.py
+    sigAddSelection = qt.pyqtSignal(object)
+    sigRemoveSelection = qt.pyqtSignal(object)
+    sigReplaceSelection = qt.pyqtSignal(object)
+    sigOtherSignals = qt.pyqtSignal(object)
+
     def __init__(self, parent=None):
         super().__init__()
 

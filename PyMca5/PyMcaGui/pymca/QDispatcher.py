@@ -260,6 +260,9 @@ class QDispatcher(qt.QWidget):
                 _logger.debug("connecting source of type %s" % sourceType)
                 source.sigUpdated.connect(self._selectionUpdatedSlot)
 
+        elif ddict["event"] == "Open Tiled Tab":
+            self.tabWidget.setCurrentWidget(self.selectorWidget["Tiled"])
+
         elif (ddict["event"] == "SourceSelected") or \
              (ddict["event"] == "SourceReloaded"):
             found = 0
