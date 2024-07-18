@@ -1,4 +1,6 @@
 import logging
+import numpy as np
+import os
 import time
 
 from PyMca5.PyMcaIO import TiledFile
@@ -81,7 +83,7 @@ class TiledDataSource(object):
     def getDataObject(self):
         pass
 
-        def isUpdated(self, sourceName, key):
+    def isUpdated(self, sourceName, key):
         #sourceName is redundant?
         index, entry = key.split(".")
         index = int(index)-1
@@ -92,7 +94,7 @@ class TiledDataSource(object):
         else:
             return False
 
-source_types = { SOURCE_TYPE: NexusDataSource}
+source_types = { SOURCE_TYPE: TiledDataSource}
 
 def DataSource(name="", source_type=SOURCE_TYPE):
   try:
@@ -112,7 +114,7 @@ if __name__ == "__main__":
         print("Usage: NexusDataSource <file> <key>")
         sys.exit()
     #one can use this:
-    obj = NexusDataSource(sourcename)
+    obj = TiledDataSource(sourcename)
     #or this:
     obj = DataSource(sourcename)
     #data = obj.getData(key,selection={'pos':(10,10),'size':(40,40)})
@@ -123,10 +125,10 @@ if __name__ == "__main__":
     print("info = ",data.info)
     if data.data is not None:
         print("data shape = ",data.data.shape)
-        print(numpy.ravel(data.data)[0:10])
+        print(np.ravel(data.data)[0:10])
     else:
         print(data.y[0].shape)
-        print(numpy.ravel(data.y[0])[0:10])
+        print(np.ravel(data.y[0])[0:10])
     data = obj.getDataObject('1.1',selection=None)
     r = int(key.split('.')[-1])
     print(" data[%d,0:10] = " % (r-1),data.data[r-1   ,0:10])
