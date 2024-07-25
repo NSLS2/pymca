@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
 from PyMca5.PyMcaGui.plotting import PlotWindow
-from . import ScanFit
+from PyMca5.PyMcaGui.pymca import ScanFit
 from PyMca5.PyMcaMath import SimpleMath
 from PyMca5.PyMcaCore import DataObject
 import copy

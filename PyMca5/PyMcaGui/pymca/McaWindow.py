@@ -47,13 +47,13 @@ import copy
 
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
 from PyMca5.PyMcaGui.plotting.PyMca_Icons import IconDict
-from .ScanWindow import ScanWindow
-from . import McaCalibrationControlGUI
+from PyMca5.PyMcaGui.pymca import ScanWindow
+from PyMca5.PyMcaGui.pymca import McaCalibrationControlGUI
 from PyMca5.PyMcaIO import ConfigDict
 from PyMca5.PyMcaGui.physics.xrf import McaAdvancedFit
 from PyMca5.PyMcaGui.physics.xrf import McaCalWidget
 from PyMca5.PyMcaCore import DataObject
-from . import McaSimpleFit
+from PyMca5.PyMcaGui.pymca import McaSimpleFit
 from PyMca5.PyMcaMath.fitting import Specfit
 from PyMca5.PyMcaMath.fitting import SpecfitFuns
 from PyMca5.PyMcaGui.plotting import PyMcaPrintPreview
@@ -74,15 +74,16 @@ _logger = logging.getLogger(__name__)
 # _logger.setLevel(logging.DEBUG
 
 
-class McaWindow(ScanWindow):
-    def __init__(self, parent=None, name="Mca Window", specfit=None, backend=None,
+class McaWindow(ScanWindow.ScanWindow):
+    def __init__(self, parent=None, title="Mca Window", specfit=None, backend=None,
                  plugins=True, newplot=False, roi=True, fit=True, **kw):
 
-        ScanWindow.__init__(self, parent,
-                                         name=name,
-                                         newplot=newplot,
-                                         plugins=plugins,
+        super().__init__(parent=parent,
+                                         name=title,
+                                         specfit=specfit,
                                          backend=backend,
+                                         plugins=plugins,
+                                         newplot=newplot,
                                          roi=roi,
                                          fit=fit,
                                          **kw)
