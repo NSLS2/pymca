@@ -7,7 +7,6 @@ import collections
 from datetime import date, datetime
 import functools
 import json
-import numpy as np
 
 from qtpy.QtCore import Qt, Signal
 from qtpy.QtGui import QIcon, QPixmap
@@ -26,13 +25,13 @@ from qtpy.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PyMca5.PyMcaGui import PyMcaQt as qt
+from PyMca5.PyMcaGui.io import TiledDataChannelTable
+
 from tiled.client import from_uri
 from tiled.client.array import DaskArrayClient
 from tiled.client.container import Container
 from tiled.structures.core import StructureFamily
-
-from PyMca5.PyMcaGui import PyMcaQt as qt
-#from silx.gui.plot import PlotWidget
 
 def json_decode(obj):
     if isinstance(obj, (datetime, date)):
@@ -83,6 +82,10 @@ class TiledBrowser(qt.QMainWindow):
         connection_layout.addWidget(self.connection_label)
         connection_layout.addStretch()
         self.connection_widget.setLayout(connection_layout)
+
+        # Search By elements
+
+        # Search By layout
 
         # Navigation elements
         self.rows_per_page_label = QLabel("Rows per page: ")
@@ -159,11 +162,38 @@ class TiledBrowser(qt.QMainWindow):
         self.catalog_table_widget.setLayout(catalog_table_layout)
         self.catalog_table_widget.setVisible(False)
 
+        # Data Channels Table
+        self.data_channels_table = TiledDataChannelTable.TiledDataChannelTable()
+        self.data_channels_table.setVisible(False)
+
+        # Command Button Elements
+        self.buttonWidget = qt.QWidget(self)
+        self.buttonWidget.setSizePolicy(qt.QSizePolicy.Minimum,
+                                   qt.QSizePolicy.Minimum)
+        addButton = qt.QPushButton("ADD", self.buttonWidget)
+        removeButton = qt.QPushButton("REMOVE", self.buttonWidget)
+        replaceButton = qt.QPushButton("REPLACE", self.buttonWidget)
+
+        # Command Buttons Layout
+        buttonLayout = qt.QHBoxLayout(self.buttonWidget)
+        buttonLayout.addWidget(addButton)
+        buttonLayout.addWidget(removeButton)
+        buttonLayout.addWidget(replaceButton)
+        buttonLayout.setContentsMargins(5, 5, 5, 5)
+        self.buttonWidget.setVisible(False)
+
+        # Command Buttons Connections
+#        addButton.connect(self.__addClicked)
+#        replaceButton.connect(self.__replaceClicked)
+#        removeButton.connect(self.__removeClicked)
+
         self.splitter = QSplitter(self)
         self.splitter.setOrientation(Qt.Orientation.Vertical)
 
         self.splitter.addWidget(self.connection_widget)
         self.splitter.addWidget(self.catalog_table_widget)
+        self.splitter.addWidget(self.data_channels_table)
+        self.splitter.addWidget(self.buttonWidget)
 
         self.splitter.setStretchFactor(1, 2)
 
@@ -171,7 +201,6 @@ class TiledBrowser(qt.QMainWindow):
         browser_layout.addWidget(self.splitter)
 
         layout = QHBoxLayout()
-    #    layout.addWidget(self._plot)
         layout.addLayout( browser_layout )
 
         centralWidget = qt.QWidget(self)
@@ -187,6 +216,8 @@ class TiledBrowser(qt.QMainWindow):
         self.rows_per_page_selector.currentTextChanged.connect(
             self._on_rows_per_page_changed
         )
+
+        self.data = None
 
     def _on_connect_clicked(self):
         url = self.url_entry.displayText().strip()
@@ -204,12 +235,24 @@ class TiledBrowser(qt.QMainWindow):
             self.connection_label.setText(f"Connected to {url}")
             self.set_root(root)
 
+    def setData(self, filedata):
+        self.data = filedata
+        self.refreshData()
+
+    def refreshData(self):
+        pass
+
+    def clearData(self):
+        self.data = None
+
     def set_root(self, root):
         self.root = root
         self.node_path = ()
         self._current_page = 0
         if root is not None:
             self.catalog_table_widget.setVisible(True)
+            self.data_channels_table.setVisible(True)
+            self.buttonWidget.setVisible(True)
             self._rebuild()
 
     def get_current_node(self):
@@ -222,21 +265,20 @@ class TiledBrowser(qt.QMainWindow):
         return self.root
 
     def enter_node(self, node_id):
-        self.node_path += (node_id,)
-        self._current_page = 0
-        self._rebuild()
+        if 'raw' in self.node_path:
+            self.node_path += (node_id,)
+            rawDataChannels = tuple(self.get_current_node().items())
+            dataChannels = [channel[0] for channel in rawDataChannels]
+            self.data_channels_table.build_table(dataChannels)
+        else:
+            self.node_path += (node_id,)
+            self._current_page = 0
+            self._rebuild()
 
     def exit_node(self):
         self.node_path = self.node_path[:-1]
         self._current_page = 0
         self._rebuild()
-
-    #def generate_plot(self, node):
-    #    plot = self.getPlotWidget()
-    #    plot.clear()
-    #    plot.getDefaultColormap().setName("viridis")
-    #    plot.addImage(node)
-    #    plot.resetZoom()
 
     def open_node(self, node_id):
         node = self.get_current_node()[node_id]
@@ -245,23 +287,8 @@ class TiledBrowser(qt.QMainWindow):
             print(f"Cannot open type: '{family}'")
             return
         if family == StructureFamily.array:
-            if node.ndim == 1:
-                node = node[:, np.newaxis]
-    #           self.generate_plot(node)
-            elif node.ndim > 3:
-                # Determine dimensions of array an which to slice.
-                num_dims = node.ndim
-                slicing_indices = tuple([0] * (num_dims - 3) + [slice(None)] * 3)
-
-                # Convert array to three dimensions and plot data.
-                node_3d = node[slicing_indices]
-    #            try:
-    #                self.generate_plot(node_3d)
-    #            except ValueError:
-    #                print("RGB(A) image is expected to have 3" 
-    #                      " or 4 elements as last dimension. Got too many")
-    #        else:
-    #           self.generate_plot(node)
+            # TODO: find a way set data to self.data
+            self.setData(node)
         elif family == StructureFamily.container:
             self.enter_node(node_id)
         else:
