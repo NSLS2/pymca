@@ -185,9 +185,9 @@ class TiledBrowser(qt.QMainWindow):
         self.buttonWidget.setVisible(False)
 
         # Command Buttons Connections
-#        addButton.connect(self._addClicked)
-#        replaceButton.connect(self._replaceClicked)
-#        removeButton.connect(self._removeClicked)
+        addButton.clicked.connect(self._addClicked)
+        replaceButton.clicked.connect(self._replaceClicked)
+        removeButton.clicked.connect(self._removeClicked)
 
         self.splitter = QSplitter(self)
         self.splitter.setOrientation(Qt.Orientation.Vertical)
@@ -510,6 +510,8 @@ class TiledBrowser(qt.QMainWindow):
         self.current_location_label.setText(current_location_text)
 
     def _addClicked(self, emit=True):
+        """Plots scan to the scan window after it is selected and the add button is clicked."""
+        
         sel_list = []
         channel_sel  = self.data_channels_table.getChannelSelection()
         if len(channel_sel['Data Channel List']):
@@ -517,7 +519,6 @@ class TiledBrowser(qt.QMainWindow):
                 sel = {
                     'SourceName': self.data.SourceName,
                     'SourceType': self.data.sourceType,
-                    'Key': scan,
                     'selection': {'x': channel_sel['x'],
                                    'y': channel_sel['y'],
                                    'm': channel_sel['m'],
@@ -531,7 +532,13 @@ class TiledBrowser(qt.QMainWindow):
                 self.sigAddSelection.emit(sel_list)
             else:
                 return sel_list
-            
+
+    def _replaceClicked(self):
+        pass
+
+    def _removeClicked(self):
+        pass
+
     #def getPlotWidget(self):
     #    """Returns the PlotWidget contains in this window"""
     #    return self._plot

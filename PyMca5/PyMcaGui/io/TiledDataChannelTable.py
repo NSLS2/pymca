@@ -48,6 +48,7 @@ class TiledDataChannelTable(qt.QTableWidget):
         Builds the table in QTiledWidget based on the datachannels in selected
         scan file.
         """
+        self.dataChannelList = channelList
         n = len(channelList)
         self.setRowCount(n)
         if n > 0:
