@@ -1,3 +1,5 @@
+from PyQt5 import QtWidgets
+
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.SpecFileCntTable import CheckBoxItem
 
@@ -14,7 +16,10 @@ class TiledDataChannelTable(qt.QTableWidget):
         self.ySelection = []
         self.monSelection = []
         
-        # Columns & Column Headers
+    def format_table(self):
+        """Sets the column headers and the size of the columns for the table."""
+        
+        # Column Labels
         labels = ['Data Channel', 'x', 'y', 'Mon']
         self.setColumnCount(len(labels))
         for i in range(len(labels)):
@@ -23,6 +28,20 @@ class TiledDataChannelTable(qt.QTableWidget):
                 item = qt.QTableWidgetItem(labels[i])
             item.setText(labels[i])
             self.setHorizontalHeaderItem(i, item)
+
+    def clear_table(self):
+        """Clears the table if a different scan is selected."""
+        # Clear contents of the table
+        self.setRowCount(0)
+        self.setColumnCount(0)
+
+        # Reset internal state
+        self.dataChannelList = []
+        self.xSelection = []
+        self.ySelection = []
+        self.monSelection = []
+
+        self.format_table()
 
     def build_table(self, channelList):
         """
@@ -61,6 +80,15 @@ class TiledDataChannelTable(qt.QTableWidget):
                 widget.sigCheckBoxItemSignal.connect(self._mySlot)
             else:
                 pass
+
+            # Resize columns to fit contents
+        self.resizeColumnsToContents()
+
+        # Stretch Columns to fill the table
+        column_count = self.columnCount()
+        for column in range(column_count):
+            self.horizontalHeader().setStretchLastSection(True)
+            self.horizontalHeader().setSectionResizeMode(column, QtWidgets.QHeaderView.Stretch)
 
     def _mySlot(self, ddict):
         row = ddict["row"]
