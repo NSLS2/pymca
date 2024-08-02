@@ -9,6 +9,7 @@ class TiledDataChannelTable(qt.QTableWidget):
     The selections for the x and y set the axes in the scan window.
     """
     sigTiledDataChannelTableSignal = qt.pyqtSignal(object)
+
     def __init__(self, parent=None):
         qt.QTableWidget.__init__(self, parent)
         self.dataChannelList = []
@@ -28,6 +29,11 @@ class TiledDataChannelTable(qt.QTableWidget):
                 item = qt.QTableWidgetItem(labels[i])
             item.setText(labels[i])
             self.setHorizontalHeaderItem(i, item)
+
+        # Strech Columns to fill table
+        self.horizontalHeader().setStretchLastSection(True)
+        for column in range(self.columnCount()):
+            self.horizontalHeader().setSectionResizeMode(column, QtWidgets.QHeaderView.Stretch)
 
     def clear_table(self):
         """Clears the table if a different scan is selected."""
@@ -52,8 +58,8 @@ class TiledDataChannelTable(qt.QTableWidget):
         n = len(channelList)
         self.setRowCount(n)
         if n > 0:
-            for i in range(n):
-                self._addLine(i, channelList[i])
+            for (i, channelLabel) in enumerate(channelList):
+                self._addLine(i, channelLabel)
 
     def _addLine(self, i, channelLabel):
         """
@@ -73,14 +79,12 @@ class TiledDataChannelTable(qt.QTableWidget):
         item.setFlags(qt.Qt.ItemIsEnabled)
 
         # Checkboxes
-        for j in range(1, 4):
+        for j in range(1, self.columnCount()):
             widget = self.cellWidget(i, j)
             if widget is None:
                 widget = CheckBoxItem(self, i, j)
                 self.setCellWidget(i, j, widget)
                 widget.sigCheckBoxItemSignal.connect(self._mySlot)
-            else:
-                pass
 
             # Resize columns to fit contents
         self.resizeColumnsToContents()

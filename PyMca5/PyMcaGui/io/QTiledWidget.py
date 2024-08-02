@@ -65,9 +65,6 @@ class TiledBrowser(qt.QMainWindow):
 
         self.set_root(None)
 
-        # Create a PlotWidget
-    #    self._plot = PlotWidget(parent=self)
-
         # Connection elements
         self.url_entry = QLineEdit()
         self.url_entry.setPlaceholderText("Enter a url")
@@ -84,10 +81,32 @@ class TiledBrowser(qt.QMainWindow):
         self.connection_widget.setLayout(connection_layout)
 
         # Search By elements
-        # TODO: Create drop down menu that searches scans by different metadata
+        searchBy_tuple = ('plan', 'sample', 'scan_id', 'uid')
 
-        # Search By layout
-        # TODO: Incorporate Search By elements into a layout
+        self.search_dropdown = QComboBox()
+        self.search_dropdown.addItems(searchBy_tuple)
+        self.search_label = QLabel("Search By")
+        self.search_entry = QLineEdit()
+        self.search_entry.setPlaceholderText("Enter Search")
+        self.search_drop_widget = QWidget()
+        self.search_widget = QWidget()
+
+        # Search Drop Down
+        search_dropdown_layout = QHBoxLayout()
+        search_dropdown_layout.addWidget(self.search_dropdown)
+        search_dropdown_layout.addWidget(self.search_label)
+        search_dropdown_layout.setContentsMargins(0, 0, 0, 0)
+        search_dropdown_layout.setSpacing(5)
+        self.search_drop_widget.setLayout(search_dropdown_layout)
+        
+        # Larger Search Widget
+        search_layout = QVBoxLayout()
+        search_layout.addWidget(self.search_drop_widget)
+        search_layout.addWidget(self.search_entry)
+        search_layout.setContentsMargins(0, 0, 0, 0)
+        search_layout.setSpacing(10)
+        self.search_widget.setLayout(search_layout)
+        self.search_widget.setVisible(False)
 
         # Navigation elements
         self.rows_per_page_label = QLabel("Rows per page: ")
@@ -193,15 +212,17 @@ class TiledBrowser(qt.QMainWindow):
         self.splitter.setOrientation(Qt.Orientation.Vertical)
 
         self.splitter.addWidget(self.connection_widget)
+        self.splitter.addWidget(self.search_widget)
         self.splitter.addWidget(self.catalog_table_widget)
         self.splitter.addWidget(self.data_channels_table)
         self.splitter.addWidget(self.buttonWidget)
 
         # Set stretch factors for widgets
         self.splitter.setStretchFactor(0, 1) # Strech factor for Connection Widget
-        self.splitter.setStretchFactor(1, 2) # Strech factor for Catalog Table
-        self.splitter.setStretchFactor(2, 3) # Strech factor for Data Channel Table
-        self.splitter.setStretchFactor(3, 1) # Strech factor for the Command Buttons
+        self.splitter.setStretchFactor(1, 1) # Strech factor for Search Widget
+        self.splitter.setStretchFactor(2, 3) # Strech factor for Catalog Table
+        self.splitter.setStretchFactor(3, 4) # Strech factor for Data Channel Table
+        self.splitter.setStretchFactor(4, 1) # Strech factor for the Command Buttons
 
         browser_layout = QVBoxLayout()
         browser_layout.addWidget(self.splitter)
@@ -241,7 +262,7 @@ class TiledBrowser(qt.QMainWindow):
             self.connection_label.setText(f"Connected to {url}")
             self.set_root(root)
 
-    def setData(self, filedata):
+    def setDataSource(self, filedata):
         self.data = filedata
         self.refreshData()
 
@@ -256,6 +277,7 @@ class TiledBrowser(qt.QMainWindow):
         self.node_path = ()
         self._current_page = 0
         if root is not None:
+            self.search_widget.setVisible(True)
             self.catalog_table_widget.setVisible(True)
             self.data_channels_table.setVisible(True)
             self.buttonWidget.setVisible(True)
@@ -516,6 +538,7 @@ class TiledBrowser(qt.QMainWindow):
         channel_sel  = self.data_channels_table.getChannelSelection()
         if len(channel_sel['Data Channel List']):
             if len(channel_sel['y']):
+                # TODO: find was to give self.data a SourceName method.
                 sel = {
                     'SourceName': self.data.SourceName,
                     'SourceType': self.data.sourceType,
@@ -539,14 +562,6 @@ class TiledBrowser(qt.QMainWindow):
     def _removeClicked(self):
         pass
 
-    #def getPlotWidget(self):
-    #    """Returns the PlotWidget contains in this window"""
-    #    return self._plot
-    
-    #def showImage(self):
-    #    plot = self.getPlotWidget()
-    #    plot.clear()
-    #    plot.getDefaultColormap().setName("viridis")
 
 
 class ClickableQLabel(QLabel):
