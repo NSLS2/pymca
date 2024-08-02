@@ -3876,7 +3876,6 @@ def change_icons(plot):
     if hasattr(plot, "printPreview"):
         plot.printPreview.setIcon(qt.QIcon(qt.QPixmap(IconDict["fileprint"])))
 
-
 def showIcons():
     w = qt.QWidget()
     g = qt.QGridLayout(w)
@@ -3901,12 +3900,12 @@ def showIcons():
     w.show()
     return w
 
-#if __name__ == '__main__':
-#    from PyMca5.PyMcaGui import PyMcaQt as qt
-#    app = qt.QApplication(sys.argv)
-#    app.lastWindowClosed.connect(app.quit)
-#    logging.basicConfig()
-#    _logger.setLevel(logging.DEBUG)
-#    w = showIcons()
-#    app.exec()
-#    app = None
+if __name__ == '__main__':
+    from PyMca5.PyMcaGui import PyMcaQt as qt
+    app = qt.QApplication(sys.argv)
+    app.lastWindowClosed.connect(app.quit)
+    logging.basicConfig()
+    _logger.setLevel(logging.DEBUG)
+    w = showIcons()
+    app.exec()
+    app = None

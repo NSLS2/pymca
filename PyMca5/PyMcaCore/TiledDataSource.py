@@ -2,7 +2,9 @@ import logging
 import numpy as np
 import os
 import time
+import sys
 
+from PyMca5.PyMcaCore import DataObject
 from PyMca5.PyMcaIO import TiledFile
 
 SOURCE_TYPE = 'Tiled'
@@ -22,14 +24,21 @@ class TiledDataSource(object):
     """
 
     def __init__(self, nameInput):
-        self.nameList = nameInput
+        if isinstance(nameInput, list):
+            nameList = nameInput
+        else:
+            nameList = [nameInput]
+        self.sourceName = nameList
         self.source_type = SOURCE_TYPE
-        self.__sourceNameList = self.__sourceNameList
+        self.__sourceNameList = self.sourceName
         self._sourceObjectList = []
         self.refresh()
 
     def refresh(self):
-        pass
+        self._sourceObjectList = []
+        for name in self.__sourceNameList:
+            self._sourceObjectList.append(TiledFile.TiledFile(name))
+        self.__lastKeyInfo = {}
 
     def getSourceInfo(self):
         """
@@ -40,16 +49,16 @@ class TiledDataSource(object):
         return self.__getSourceInfo()
     
     def __getSourceInfo(self):
-        SourceInfo={}
-        SourceInfo["SourceType"]=SOURCE_TYPE
-        SourceInfo["KeyList"]=[]
+        SourceInfo = {}
+        SourceInfo["SourceType"] = SOURCE_TYPE
+        SourceInfo["KeyList"] = []
         i = 0
         for sourceObject in self._sourceObjectList:
-            i+=1
+            i += 1
             nEntries = len(sourceObject["/"].keys())
             for n in range(nEntries):
                 SourceInfo["KeyList"].append("%d.%d" % (i,n+1))
-        SourceInfo["Size"]=len(SourceInfo["KeyList"])
+        SourceInfo["Size"] = len(SourceInfo["KeyList"])
         return SourceInfo
     
     def getKeyInfo(self, key):
@@ -60,28 +69,38 @@ class TiledDataSource(object):
             _logger.debug("Error key not in list ")
             return {}
 
-    def __getKeyInfo(self,key):
+    def __getKeyInfo(self, key):
         try:
             index, entry = key.split(".")
-            index = int(index)-1
-            entry = int(entry)-1
+            index = int(index) - 1
+            entry = int(entry) - 1
         except Exception:
             #should we rise an error?
             _logger.debug("Error trying to interpret key = %s", key)
             return {}
         
         sourceObject = self._sourceObjectList[index]
-        info = {}
-        info["SourceType"]  = SOURCE_TYPE
-        #doubts about if refer to the list or to the individual file
-        info["SourceName"]  = self.sourceName[index]
-        info["Key"]         = key
-        #specific info of interest
-        info['FileName'] = sourceObject.name
+        
+        info = {
+            "SourceType": SOURCE_TYPE,
+            "SourceName": self.sourceName[index],
+            "Key": key,
+            "FileName": sourceObject.name,
+        }
+
         return info
     
-    def getDataObject(self):
-        pass
+    def getDataObject(self, key, selection=None):
+        data = DataObject.DataObject()
+        index, entry = key.split(".")
+        index = int(index) - 1
+        entry = int(entry) - 1
+
+        data.info = self.__getKeyInfo(key)
+        data.info['selection'] = selection
+
+        sourceObject = self._sourceObjectList[index]
+        data.data = sourceObject.getData()
 
     def isUpdated(self, sourceName, key):
         #sourceName is redundant?
@@ -108,10 +127,10 @@ def DataSource(name="", source_type=SOURCE_TYPE):
 
 if __name__ == "__main__":
     try:
-        sourcename=sys.argv[1]
-        key       =sys.argv[2]
+        sourcename = sys.argv[1]
+        key = sys.argv[2]
     except Exception:
-        print("Usage: NexusDataSource <file> <key>")
+        print("Usage: TiledDataSource <file> <key>")
         sys.exit()
     #one can use this:
     obj = TiledDataSource(sourcename)

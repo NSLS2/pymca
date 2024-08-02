@@ -47,8 +47,8 @@ import copy
 
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
 from PyMca5.PyMcaGui.plotting.PyMca_Icons import IconDict
-from PyMca5.PyMcaGui.pymca import ScanWindow
 from PyMca5.PyMcaGui.pymca import McaCalibrationControlGUI
+from PyMca5.PyMcaGui.pymca.ScanWindow import ScanWindow
 from PyMca5.PyMcaIO import ConfigDict
 from PyMca5.PyMcaGui.physics.xrf import McaAdvancedFit
 from PyMca5.PyMcaGui.physics.xrf import McaCalWidget
@@ -74,7 +74,7 @@ _logger = logging.getLogger(__name__)
 # _logger.setLevel(logging.DEBUG
 
 
-class McaWindow(ScanWindow.ScanWindow):
+class McaWindow(ScanWindow):
     def __init__(self, parent=None, title="Mca Window", specfit=None, backend=None,
                  plugins=True, newplot=False, roi=True, fit=True, **kw):
 
