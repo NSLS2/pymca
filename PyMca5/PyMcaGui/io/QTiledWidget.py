@@ -81,10 +81,11 @@ class TiledBrowser(qt.QMainWindow):
         self.connection_widget.setLayout(connection_layout)
 
         # Search By elements
-        searchBy_tuple = ('plan', 'sample', 'scan_id', 'uid')
+        searchBy_tuple = ('Plan Name', 'Plan Type', 'Project', 'Scan ID', 'uid')
 
         self.search_dropdown = QComboBox()
         self.search_dropdown.addItems(searchBy_tuple)
+        self.search_dropdown.currentTextChanged.connect(self._set_search_by)
         self.search_label = QLabel("Search By")
         self.search_entry = QLineEdit()
         self.search_entry.setPlaceholderText("Enter Search")
@@ -244,6 +245,8 @@ class TiledBrowser(qt.QMainWindow):
             self._on_rows_per_page_changed
         )
 
+        # Default values
+        self.searchBy_selection = 'uid'
         self.data = None
 
     def _on_connect_clicked(self):
@@ -468,9 +471,22 @@ class TiledBrowser(qt.QMainWindow):
                 icon = self.style().standardIcon(
                     QStyle.SP_TitleBarContextHelpButton
                 )
-            self.catalog_table.setItem(
-                row_index, 0, QTableWidgetItem(icon, key)
-            )
+            if 'raw' not in self.node_path:
+                self.catalog_table.setItem(
+                        row_index, 0, QTableWidgetItem(icon, key)
+                    )
+            else:
+                if self.searchBy_selection != 'uid':
+                    searchBy_key = self._get_search_by()
+                    metadata_path = value.item["attributes"]["metadata"]["start"][searchBy_key]
+                    key = str(metadata_path)
+                    self.catalog_table.setItem(
+                        row_index, 0, QTableWidgetItem(icon, key)
+                    )
+                else:
+                    self.catalog_table.setItem(
+                        row_index, 0, QTableWidgetItem(icon, key)
+                    )
 
         # remove extra rows
         for row in range(self._rows_per_page - len(items)):
@@ -494,6 +510,19 @@ class TiledBrowser(qt.QMainWindow):
         self._rebuild_current_path_layout()
         self._set_current_location_label()
         self.data_channels_table.clear_table()
+
+    def _set_search_by(self, selection=None):
+        """
+        Converts user selection in the Search DropDown to value that can be
+        referenced in the metadata.
+        """
+        if selection is not None:
+            self.searchBy_selection = selection.lower().replace(' ', '_')
+        return self.searchBy_selection
+    
+    def _get_search_by(self):
+        """"Retrieves user selected search by method in form that can be searched in metadata."""
+        return self.searchBy_selection
 
     def _on_prev_page_clicked(self):
         if self._current_page != 0:
