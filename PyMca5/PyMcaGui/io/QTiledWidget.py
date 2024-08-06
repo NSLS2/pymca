@@ -250,6 +250,7 @@ class TiledBrowser(qt.QMainWindow):
         self.searchBy_selection = 'uid'
         self.data = None
         self.previous_search_text = ''
+        self.key_to_uid = {}
 
     def _on_connect_clicked(self):
         url = self.url_entry.displayText().strip()
@@ -349,16 +350,27 @@ class TiledBrowser(qt.QMainWindow):
         if item is self.catalog_breadcrumbs:
             self.exit_node()
             return
-        self.open_node(item.text())
+        
+        if 'raw' not in self.node_path:
+            self.open_node(item.text())
+        else: 
+            uid = str(self.key_to_uid.get(item.text()))
+            self.open_node(uid)
 
     def _on_item_selected(self):
         selected = self.catalog_table.selectedItems()
         if not selected or (item := selected[0]) is self.catalog_breadcrumbs:
             self._clear_metadata()
             return
-
+        
         name = item.text()
-        node_path = self.node_path + (name,)
+        if 'raw' not in self.node_path:
+            node_path = self.node_path + (name,)
+        
+        else:
+            uid = str(self.key_to_uid.get(name))
+            node_path = self.node_path + (uid,)
+             
         node = self.get_node(node_path)
 
         attrs = node.item["attributes"]
@@ -480,7 +492,9 @@ class TiledBrowser(qt.QMainWindow):
                 if self.searchBy_selection != 'uid':
                     searchBy_key = self._get_search_by()
                     metadata_path = value.item["attributes"]["metadata"]["start"][searchBy_key]
+                    uid = value.item["attributes"]["metadata"]["start"]["uid"]
                     key = str(metadata_path)
+                    self.key_to_uid[key] = uid
 
                 user_entry = self.search_entry.text()
                 if user_entry:
