@@ -81,7 +81,7 @@ class TiledBrowser(qt.QMainWindow):
         self.connection_widget.setLayout(connection_layout)
 
         # Search By elements
-        searchBy_tuple = ('Plan Name', 'Plan Type', 'Project', 'Scan ID', 'uid')
+        searchBy_tuple = ('Plan Name', 'Plan Type', 'Scan ID', 'uid')
 
         self.search_dropdown = QComboBox()
         self.search_dropdown.addItems(searchBy_tuple)
@@ -89,6 +89,7 @@ class TiledBrowser(qt.QMainWindow):
         self.search_label = QLabel("Search By")
         self.search_entry = QLineEdit()
         self.search_entry.setPlaceholderText("Enter Search")
+        self.search_entry.textChanged.connect(self._search_text_changed)
         self.search_drop_widget = QWidget()
         self.search_widget = QWidget()
 
@@ -248,6 +249,7 @@ class TiledBrowser(qt.QMainWindow):
         # Default values
         self.searchBy_selection = 'uid'
         self.data = None
+        self.previous_search_text = ''
 
     def _on_connect_clicked(self):
         url = self.url_entry.displayText().strip()
@@ -292,7 +294,10 @@ class TiledBrowser(qt.QMainWindow):
     @functools.lru_cache(maxsize=1)
     def get_node(self, node_path):
         if node_path:
+           # if 'raw' not in node_path:
             return self.root[node_path]
+            # else:
+            #     print(node_path)
         return self.root
 
     def enter_node(self, node_id):
@@ -446,10 +451,6 @@ class TiledBrowser(qt.QMainWindow):
             self.catalog_table.insertRow(0)
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
-        # Then add new rows
-        for row in range(self._rows_per_page):
-            last_row_position = self.catalog_table.rowCount()
-            self.catalog_table.insertRow(last_row_position)
         node_offset = self._rows_per_page * self._current_page
         # Fetch a page of keys.
         items = self.get_current_node().items()[
@@ -457,9 +458,8 @@ class TiledBrowser(qt.QMainWindow):
         ]
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.node_path else 0
-        for row_index, (key, value) in zip(
-            range(start, self.catalog_table.rowCount()), items
-        ):
+        row_index = start
+        for key, value in items:
             family = value.item["attributes"]["structure_family"]
             if family == StructureFamily.container:
                 icon = self.style().standardIcon(QStyle.SP_DirHomeIcon)
@@ -472,24 +472,30 @@ class TiledBrowser(qt.QMainWindow):
                     QStyle.SP_TitleBarContextHelpButton
                 )
             if 'raw' not in self.node_path:
-                self.catalog_table.setItem(
-                        row_index, 0, QTableWidgetItem(icon, key)
-                    )
+                self.catalog_table.insertRow(row_index)
+                self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
+                row_index += 1
+
             else:
                 if self.searchBy_selection != 'uid':
                     searchBy_key = self._get_search_by()
                     metadata_path = value.item["attributes"]["metadata"]["start"][searchBy_key]
                     key = str(metadata_path)
-                    self.catalog_table.setItem(
-                        row_index, 0, QTableWidgetItem(icon, key)
-                    )
+
+                user_entry = self.search_entry.text()
+                if user_entry:
+                    if self._filter_table(key):
+                        self.catalog_table.insertRow(row_index)
+                        self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
+                        row_index += 1
+
                 else:
-                    self.catalog_table.setItem(
-                        row_index, 0, QTableWidgetItem(icon, key)
-                    )
+                    self.catalog_table.insertRow(row_index)
+                    self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
+                    row_index += 1
 
         # remove extra rows
-        for row in range(self._rows_per_page - len(items)):
+        while row_index < self.catalog_table.rowCount():
             self.catalog_table.removeRow(self.catalog_table.rowCount() - 1)
 
         headers = [
@@ -505,6 +511,12 @@ class TiledBrowser(qt.QMainWindow):
         self._clear_metadata()
         self.catalog_table.blockSignals(prev_block)
 
+    def _add_line_catalog_table(self, row_index, icon, key):
+        """Add line to catalog table."""
+        self.catalog_table.insertRow(row_index)
+        self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
+        row_index += 1
+
     def _rebuild(self):
         self._rebuild_table()
         self._rebuild_current_path_layout()
@@ -518,12 +530,26 @@ class TiledBrowser(qt.QMainWindow):
         """
         if selection is not None:
             self.searchBy_selection = selection.lower().replace(' ', '_')
+        self._rebuild()
         return self.searchBy_selection
-    
+        
     def _get_search_by(self):
         """"Retrieves user selected search by method in form that can be searched in metadata."""
         return self.searchBy_selection
-
+    
+    def _filter_table(self, scan):
+        """This filters out scans that do not match the text in the search bar."""
+        user_entry = str(self.search_entry.text())
+        value = user_entry in scan
+        return value
+    
+    def _search_text_changed(self):
+        """Updates Catalog Table if in 'Raw' directory and search entry is changed."""
+        current_text = self.search_entry.text()
+        if current_text != self.previous_search_text:
+            if 'raw' in self.node_path:
+                self._rebuild_table()
+        
     def _on_prev_page_clicked(self):
         if self._current_page != 0:
             self._current_page -= 1
