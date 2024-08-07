@@ -85,6 +85,7 @@ class TiledBrowser(qt.QMainWindow):
 
         self.search_dropdown = QComboBox()
         self.search_dropdown.addItems(searchBy_tuple)
+        self.search_dropdown.setCurrentIndex(-1)
         self.search_dropdown.currentTextChanged.connect(self._set_search_by)
         self.search_label = QLabel("Search By")
         self.search_entry = QLineEdit()
@@ -351,9 +352,10 @@ class TiledBrowser(qt.QMainWindow):
             self.exit_node()
             return
         
-        if 'raw' not in self.node_path:
+        try:
             self.open_node(item.text())
-        else: 
+            
+        except KeyError: 
             uid = str(self.key_to_uid.get(item.text()))
             self.open_node(uid)
 
@@ -364,15 +366,15 @@ class TiledBrowser(qt.QMainWindow):
             return
         
         name = item.text()
-        if 'raw' not in self.node_path:
+        try:
             node_path = self.node_path + (name,)
+            node = self.get_node(node_path)
         
-        else:
+        except KeyError:
             uid = str(self.key_to_uid.get(name))
             node_path = self.node_path + (uid,)
+            node = self.get_node(node_path)
              
-        node = self.get_node(node_path)
-
         attrs = node.item["attributes"]
         family = attrs["structure_family"]
         metadata = json.dumps(attrs["metadata"], indent=2, default=json_decode)
@@ -463,11 +465,51 @@ class TiledBrowser(qt.QMainWindow):
             self.catalog_table.insertRow(0)
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
+        # All key value pairs for current node
+        all_items = self.get_current_node().items()
+
+        # Changed keys:
+        changed_keys_values = []
+
+        # Change key metadata if applicable
+        for key, value in all_items:
+            if self.searchBy_selection != 'uid' and 'raw' in self.node_path:
+                searchBy_key = self._get_search_by()
+                metadata_path = value.item["attributes"]["metadata"]["start"][searchBy_key]
+                uid = value.item["attributes"]["metadata"]["start"]["uid"]
+                key = str(metadata_path)
+                self.key_to_uid[key] = uid
+
+                user_entry = self.search_entry.text()
+                # If there is an entry in the search bar
+                if user_entry:
+                    if self._filter_row_in_table(key):
+                        changed_keys_values.append((key, value))
+                    else:
+                        pass
+                # If there is no entry in the search bar
+                else:
+                    changed_keys_values.append((key, value))
+
+            # If there is no Search By selection 
+            else:
+                user_entry = self.search_entry.text()
+                # If there is an entry in the search bar
+                if user_entry:
+                    if self._filter_row_in_table(key):
+                        changed_keys_values.append((key, value))
+                    else:
+                        pass
+                # If there is no entry in the search bar
+                else:
+                    changed_keys_values.append((key, value))
+
         node_offset = self._rows_per_page * self._current_page
         # Fetch a page of keys.
-        items = self.get_current_node().items()[
+        items = changed_keys_values[
             node_offset : node_offset + self._rows_per_page
         ]
+
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.node_path else 0
         row_index = start
@@ -483,30 +525,10 @@ class TiledBrowser(qt.QMainWindow):
                 icon = self.style().standardIcon(
                     QStyle.SP_TitleBarContextHelpButton
                 )
-            if 'raw' not in self.node_path:
-                self.catalog_table.insertRow(row_index)
-                self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
-                row_index += 1
 
-            else:
-                if self.searchBy_selection != 'uid':
-                    searchBy_key = self._get_search_by()
-                    metadata_path = value.item["attributes"]["metadata"]["start"][searchBy_key]
-                    uid = value.item["attributes"]["metadata"]["start"]["uid"]
-                    key = str(metadata_path)
-                    self.key_to_uid[key] = uid
-
-                user_entry = self.search_entry.text()
-                if user_entry:
-                    if self._filter_table(key):
-                        self.catalog_table.insertRow(row_index)
-                        self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
-                        row_index += 1
-
-                else:
-                    self.catalog_table.insertRow(row_index)
-                    self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
-                    row_index += 1
+            self.catalog_table.insertRow(row_index)
+            self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
+            row_index += 1
 
         # remove extra rows
         while row_index < self.catalog_table.rowCount():
@@ -551,7 +573,7 @@ class TiledBrowser(qt.QMainWindow):
         """"Retrieves user selected search by method in form that can be searched in metadata."""
         return self.searchBy_selection
     
-    def _filter_table(self, scan):
+    def _filter_row_in_table(self, scan):
         """This filters out scans that do not match the text in the search bar."""
         user_entry = str(self.search_entry.text())
         value = user_entry in scan
@@ -561,7 +583,8 @@ class TiledBrowser(qt.QMainWindow):
         """Updates Catalog Table if in 'Raw' directory and search entry is changed."""
         current_text = self.search_entry.text()
         if current_text != self.previous_search_text:
-            if 'raw' in self.node_path:
+            if 'raw' in self.node_path: # TODO: (Maybe) add second conditional.
+                                        # Don't want to rebuild table if scan is selected
                 self._rebuild_table()
         
     def _on_prev_page_clicked(self):
