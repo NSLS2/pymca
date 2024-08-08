@@ -343,6 +343,10 @@ class TiledBrowser(qt.QMainWindow):
         self.open_node(item.text())
 
     def _on_rows_per_page_changed(self, value):
+        # If scan already selected
+        if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
+            self.node_path = self.node_path[:-1]
+
         self._rows_per_page = int(value)
         self._current_page = 0
         self._rebuild_table()
