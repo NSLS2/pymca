@@ -85,7 +85,6 @@ class TiledBrowser(qt.QMainWindow):
 
         self.search_dropdown = QComboBox()
         self.search_dropdown.addItems(searchBy_tuple)
-        self.search_dropdown.setCurrentIndex(-1)
         self.search_dropdown.currentTextChanged.connect(self._set_search_by)
         self.search_label = QLabel("Search By")
         self.search_entry = QLineEdit()
@@ -296,10 +295,8 @@ class TiledBrowser(qt.QMainWindow):
     @functools.lru_cache(maxsize=1)
     def get_node(self, node_path):
         if node_path:
-           # if 'raw' not in node_path:
             return self.root[node_path]
-            # else:
-            #     print(node_path)
+      
         return self.root
 
     def enter_node(self, node_id):
@@ -319,6 +316,10 @@ class TiledBrowser(qt.QMainWindow):
         self._rebuild()
 
     def open_node(self, node_id):
+        # This allows another scan to be selected after one is already clicked on.
+        if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
+            self.node_path = self.node_path[:-1]
+
         node = self.get_current_node()[node_id]
         family = node.item["attributes"]["structure_family"]
         if isinstance(node, DummyClient):
@@ -355,25 +356,37 @@ class TiledBrowser(qt.QMainWindow):
         try:
             self.open_node(item.text())
             
-        except KeyError: 
+        except KeyError:
             uid = str(self.key_to_uid.get(item.text()))
             self.open_node(uid)
-
-    def _on_item_selected(self):
+            
+    def _on_item_selected(self):                         
         selected = self.catalog_table.selectedItems()
         if not selected or (item := selected[0]) is self.catalog_breadcrumbs:
             self._clear_metadata()
             return
         
         name = item.text()
+
         try:
             node_path = self.node_path + (name,)
             node = self.get_node(node_path)
         
         except KeyError:
-            uid = str(self.key_to_uid.get(name))
-            node_path = self.node_path + (uid,)
-            node = self.get_node(node_path)
+            try: 
+                uid = str(self.key_to_uid.get(name))
+                node_path = self.node_path + (uid,)
+                node = self.get_node(node_path)
+            
+            except KeyError:
+                try:
+                    node_path = self._replace_last_node(name)
+                    node = self.get_node(node_path)
+
+                except KeyError:
+                    uid = str(self.key_to_uid.get(name))
+                    node_path = self._replace_last_node(uid)
+                    node = self.get_node(node_path)
              
         attrs = node.item["attributes"]
         family = attrs["structure_family"]
@@ -495,7 +508,7 @@ class TiledBrowser(qt.QMainWindow):
             else:
                 user_entry = self.search_entry.text()
                 # If there is an entry in the search bar
-                if user_entry:
+                if user_entry and 'raw' in self.node_path:
                     if self._filter_row_in_table(key):
                         changed_keys_values.append((key, value))
                     else:
@@ -503,6 +516,9 @@ class TiledBrowser(qt.QMainWindow):
                 # If there is no entry in the search bar
                 else:
                     changed_keys_values.append((key, value))
+
+        self.nrows_catalog_table = len(changed_keys_values)
+        self._set_current_location_label()
 
         node_offset = self._rows_per_page * self._current_page
         # Fetch a page of keys.
@@ -565,9 +581,14 @@ class TiledBrowser(qt.QMainWindow):
         referenced in the metadata.
         """
         if selection is not None:
-            self.searchBy_selection = selection.lower().replace(' ', '_')
+            if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
+                self.searchBy_selection = selection.lower().replace(' ', '_')
+                self.node_path = self.node_path[:-1]
+            else:
+                self.searchBy_selection = selection.lower().replace(' ', '_')
+                self.node_path = self.node_path
         self._rebuild()
-        return self.searchBy_selection
+        return self.searchBy_selection, self.node_path
         
     def _get_search_by(self):
         """"Retrieves user selected search by method in form that can be searched in metadata."""
@@ -583,9 +604,18 @@ class TiledBrowser(qt.QMainWindow):
         """Updates Catalog Table if in 'Raw' directory and search entry is changed."""
         current_text = self.search_entry.text()
         if current_text != self.previous_search_text:
-            if 'raw' in self.node_path: # TODO: (Maybe) add second conditional.
-                                        # Don't want to rebuild table if scan is selected
-                self._rebuild_table()
+            if 'raw' in self.node_path:
+                if 'raw' != self.node_path[-1]:
+                    self.node_path = self.node_path[:-1]
+                    self._rebuild_table()
+                else:
+                    self._rebuild_table()
+    
+    def _replace_last_node(self, new_node_id):
+        """Replaces the last node in the current path with new selected node."""
+        if self.node_path:
+            self.node_path = self.node_path[:-1] + (new_node_id,)
+            return self.node_path
         
     def _on_prev_page_clicked(self):
         if self._current_page != 0:
@@ -615,12 +645,15 @@ class TiledBrowser(qt.QMainWindow):
                 break
 
     def _set_current_location_label(self):
+        if not self.node_path:
+            self.nrows_catalog_table = self.nrows_catalog_table
+
         starting_index = self._current_page * self._rows_per_page + 1
         ending_index = min(
             self._rows_per_page * (self._current_page + 1),
-            len(self.get_current_node()),
+            self.nrows_catalog_table,
         )
-        current_location_text = f"{starting_index}-{ending_index} of {len(self.get_current_node())}"
+        current_location_text = f"{starting_index}-{ending_index} of {self.nrows_catalog_table}"
         self.current_location_label.setText(current_location_text)
 
     def _addClicked(self, emit=True):
