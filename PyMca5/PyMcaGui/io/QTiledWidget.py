@@ -268,7 +268,7 @@ class TiledBrowser(qt.QMainWindow):
             self.connection_label.setText(f"Connected to {url}")
             self.set_root(root)
 
-    def setDataSource(self, filedata):
+    def setData(self, filedata):
         self.data = filedata
         self.refreshData()
 
@@ -277,6 +277,10 @@ class TiledBrowser(qt.QMainWindow):
 
     def clearData(self):
         self.data = None
+        
+    def set_data_source_key(self):
+        if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
+            return self.root[self.node_path]
 
     def set_root(self, root):
         self.root = root
@@ -566,12 +570,6 @@ class TiledBrowser(qt.QMainWindow):
         self.catalog_table.setVerticalHeaderLabels(headers)
         self._clear_metadata()
         self.catalog_table.blockSignals(prev_block)
-
-    def _add_line_catalog_table(self, row_index, icon, key):
-        """Add line to catalog table."""
-        self.catalog_table.insertRow(row_index)
-        self.catalog_table.setItem(row_index, 0, QTableWidgetItem(icon, key))
-        row_index += 1
 
     def _rebuild(self):
         self._rebuild_table()

@@ -89,6 +89,9 @@ def getSourceType(sourceName0):
         # wrapped as SpecFile
         return SpecFileDataSource.SOURCE_TYPE
     
+    if TiledDataSource._is_Tiled_Source(sourceName):
+        return TiledDataSource.SOURCE_TYPE
+    
     if sps is not None:
         if sourceName in sps.getspeclist():
             return QSpsDataSource.SOURCE_TYPE

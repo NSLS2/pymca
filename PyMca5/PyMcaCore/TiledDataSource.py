@@ -1,15 +1,12 @@
-import logging
 import numpy as np
-import os
 import time
 import sys
 
 from PyMca5.PyMcaCore import DataObject
-from PyMca5.PyMcaIO import TiledFile
+from PyMca5.PyMcaGui.io.TiledDataChannelTable import TiledDataChannelTable
+from PyMca5.PyMcaGui.io.QTiledWidget import TiledBrowser
 
 SOURCE_TYPE = 'Tiled'
-
-_logger = logging.getLogger(__name__)
 
 class TiledDataSource(object):
     """
@@ -31,89 +28,82 @@ class TiledDataSource(object):
         self.sourceName = nameList
         self.source_type = SOURCE_TYPE
         self.__sourceNameList = self.sourceName
-        self._sourceObjectList = []
         self.refresh()
 
     def refresh(self):
-        self._sourceObjectList = []
-        for name in self.__sourceNameList:
-            self._sourceObjectList.append(TiledFile.TiledFile(name))
-        self.__lastKeyInfo = {}
+        pass
+       
 
-    def getSourceInfo(self):
-        """
-        Returns a dictionary with the key "KeyList" (list of all available keys
-        in this source). Each element in "KeyList" has the form 'n1.n2' where
-        n1 is the source number and n2 entry number in file both starting at 1.
-        """
-        return self.__getSourceInfo()
-    
-    def __getSourceInfo(self):
-        SourceInfo = {}
-        SourceInfo["SourceType"] = SOURCE_TYPE
-        SourceInfo["KeyList"] = []
-        i = 0
-        for sourceObject in self._sourceObjectList:
-            i += 1
-            nEntries = len(sourceObject["/"].keys())
-            for n in range(nEntries):
-                SourceInfo["KeyList"].append("%d.%d" % (i,n+1))
-        SourceInfo["Size"] = len(SourceInfo["KeyList"])
-        return SourceInfo
-    
-    def getKeyInfo(self, key):
-        if key in self.getSourceInfo()['KeyList']:
-            return self.__getKeyInfo(key)
-        else:
-            #should we raise a KeyError?
-            _logger.debug("Error key not in list ")
-            return {}
-
-    def __getKeyInfo(self, key):
-        try:
-            index, entry = key.split(".")
-            index = int(index) - 1
-            entry = int(entry) - 1
-        except Exception:
-            #should we rise an error?
-            _logger.debug("Error trying to interpret key = %s", key)
-            return {}
+    def _set_key(self):
+        """Sets key once a scan has been selected in Tiled Browser."""
         
-        sourceObject = self._sourceObjectList[index]
-        
-        info = {
-            "SourceType": SOURCE_TYPE,
-            "SourceName": self.sourceName[index],
-            "Key": key,
-            "FileName": sourceObject.name,
+        selection = TiledBrowser.set_data_source_key()
+        key = {
+            "scan": selection.metadata['start']['uid'],
+            "scan_id": selection.metadata['start']['scan_id'],
+            "streams": list(selection),
+            "selection": selection, 
         }
 
-        return info
+        return key
     
-    def getDataObject(self, key, selection=None):
-        data = DataObject.DataObject()
-        index, entry = key.split(".")
-        index = int(index) - 1
-        entry = int(entry) - 1
+    def _set_data_channel_selection(self):
+        """Retrieve Data Channel Selections from Tiled Data Channel Table."""
+        
+        channel_sel = TiledDataChannelTable.getChannelSelection()
+        self.chan_sel = {
+            'x': channel_sel['x'],
+            'y': channel_sel['y'],
+            'm': channel_sel['m'],
+            'Channel List': channel_sel['Data Channel List'],
+        }
+    
+    def _get_key_info(self, selection):
+        """Retrives key info."""
 
-        data.info = self.__getKeyInfo(key)
-        data.info['selection'] = selection
+        key = self._set_key()
+        key_info = {
+            "SourceType": SOURCE_TYPE,
+            "selection": selection,
+            "key": key,
+        }
 
-        sourceObject = self._sourceObjectList[index]
-        data.data = sourceObject.getData()
+        return key_info
+    
+    def get_data_object(self, key, selection=None):
+        """Generate a dataObject that will be used to plot scan data."""
+        
+        dataObject = DataObject.DataObject()
+        dataObject.info = self._get_key_info(selection)
+        dataObject.data = key['selection']
 
-    def isUpdated(self, sourceName, key):
-        #sourceName is redundant?
-        index, entry = key.split(".")
-        index = int(index)-1
-        lastmodified = os.path.getmtime(self.__sourceNameList[index])
-        if lastmodified != self.__lastKeyInfo[key]:
-            self.__lastKeyInfo[key] = lastmodified
+        chan_sel = self.chan_sel
+
+        # What data.info attributes to add?
+        dataObject.info['selection'] = selection
+        
+        # data = [key['selection']][datachannel][data]
+        # If data channel selected in x axis go to data and time
+        dataObject.data.x = dataObject.data.chan_sel['x']['data']['time']
+        # If data channel selected in y axis plot everything
+        dataObject.data.y = dataObject.data.chan_sel['y']['data']
+        # If data selected in m divide y by m and plot
+        dataObject.data.m = dataObject.data.chan_sel['m']['data']
+
+        return dataObject
+
+    def isUpdated(self,key):
+        pass
+    
+    
+def _is_Tiled_Source(filename):
+    try:
+        if hasattr(filename, self.node_path):
             return True
-        else:
-            return False
-
-source_types = { SOURCE_TYPE: TiledDataSource}
+    except Exception:
+        return False
+    
+source_types = {SOURCE_TYPE: TiledDataSource}
 
 def DataSource(name="", source_type=SOURCE_TYPE):
   try:
