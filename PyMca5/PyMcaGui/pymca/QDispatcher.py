@@ -33,7 +33,7 @@ import logging
 from PyMca5.PyMcaGui import PyMcaQt as qt
 QTVERSION = qt.qVersion()
 from PyMca5.PyMcaGui.io import QSourceSelector
-from . import QDataSource
+from PyMca5.PyMcaGui.pymca import QDataSource
 #import weakref
 
 _logger = logging.getLogger(__name__)
@@ -259,6 +259,9 @@ class QDispatcher(qt.QWidget):
             if hasattr(source, "sigUpdated"):
                 _logger.debug("connecting source of type %s" % sourceType)
                 source.sigUpdated.connect(self._selectionUpdatedSlot)
+
+        elif ddict["event"] == "Open Tiled Tab":
+            self.tabWidget.setCurrentWidget(self.selectorWidget["Tiled"])
 
         elif (ddict["event"] == "SourceSelected") or \
              (ddict["event"] == "SourceReloaded"):

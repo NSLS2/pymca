@@ -42,12 +42,12 @@ import logging
 import numpy
 from numpy import argsort, nonzero, take
 
-from . import LegendSelector
-from .ObjectPrintConfigurationDialog import ObjectPrintConfigurationDialog
-from . import McaROIWidget
-from . import PlotWidget
-from . import MaskImageTools
-from . import RenameCurveDialog
+from PyMca5.PyMcaGui.plotting import LegendSelector
+from PyMca5.PyMcaGui.plotting.ObjectPrintConfigurationDialog import ObjectPrintConfigurationDialog
+from PyMca5.PyMcaGui.plotting import McaROIWidget
+from PyMca5.PyMcaGui.plotting import PlotWidget
+from PyMca5.PyMcaGui.plotting import MaskImageTools
+from PyMca5.PyMcaGui.plotting import RenameCurveDialog
 
 try:
     from . import ColormapDialog
@@ -55,7 +55,7 @@ try:
 except Exception:
     COLORMAP_DIALOG = False
 
-from .PyMca_Icons import IconDict
+from PyMca5.PyMcaGui.plotting.PyMca_Icons import IconDict
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
 

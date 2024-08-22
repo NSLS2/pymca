@@ -86,6 +86,7 @@ class QSourceSelector(qt.QWidget):
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["bliss"]))
         else:
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["spec"]))
+        self.tiledIcon = qt.QIcon(qt.QPixmap(icons.IconDict["bluesky"]))
 
         openButton.setIcon(self.openIcon)
         openButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
@@ -106,8 +107,13 @@ class QSourceSelector(qt.QWidget):
         else:
             specButton.setToolTip("Open new shared memory source")
 
+        tiledButton = qt.QPushButton(self.fileWidget)
+        tiledButton.setIcon(self.tiledIcon)
+        tiledButton.setToolTip("Open tiled data source")
+
         closeButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
         specButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
+        tiledButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
         refreshButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
 
         openButton.clicked.connect(self._openFileSlot)
@@ -121,10 +127,13 @@ class QSourceSelector(qt.QWidget):
             _logger.debug("Using deprecated signal")
             self.fileCombo.activated[str].connect(self._fileSelection)
 
+        tiledButton.clicked.connect(self.tiledConnection)
+
         fileWidgetLayout.addWidget(self.fileCombo)
         fileWidgetLayout.addWidget(openButton)
         fileWidgetLayout.addWidget(closeButton)
         fileWidgetLayout.addWidget(specButton)
+        fileWidgetLayout.addWidget(tiledButton)
         if sys.platform == "win32":specButton.hide()
         fileWidgetLayout.addWidget(refreshButton)
         self.specButton = specButton
@@ -331,6 +340,12 @@ class QSourceSelector(qt.QWidget):
                         lambda i=spec:self.openFile(i, specsession=True))
         menu.exec(self.cursor().pos())
 
+    def tiledConnection(self):
+        """When 'bluesky' icon clicked it opens the TiledBrowser in the Tiled Tab"""
+        ddict = {"event": "Open Tiled Tab"}
+        self.sigSourceSelectorSignal.emit(ddict)
+
+        # Potentially add a authorization window when clicked
 
     def _fileSelection(self, qstring):
         _logger.debug("file selected %s", qstring)

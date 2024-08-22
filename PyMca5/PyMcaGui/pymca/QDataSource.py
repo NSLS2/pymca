@@ -38,9 +38,11 @@ QTVERSION = qt.qVersion()
 
 from PyMca5.PyMcaCore import SpecFileDataSource
 from PyMca5.PyMcaCore import EdfFileDataSource
+from PyMca5.PyMcaCore import TiledDataSource
 from PyMca5.PyMcaIO import BlissSpecFile
 from PyMca5.PyMcaGui.io import QEdfFileWidget
 from PyMca5.PyMcaGui.io import QSpecFileWidget
+from PyMca5.PyMcaGui.io import QTiledWidget
 
 if sys.platform == "win32":
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
@@ -55,11 +57,13 @@ else:
     from PyMca5.PyMcaGui.io import QSpsWidget
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource,
-                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource}
+                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource,
+                     TiledDataSource.SOURCE_TYPE: TiledDataSource.TiledDataSource}
 
     source_widgets = { SpecFileDataSource.SOURCE_TYPE: QSpecFileWidget.QSpecFileWidget,
                        EdfFileDataSource.SOURCE_TYPE: QEdfFileWidget.QEdfFileWidget,
-                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget}
+                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget,
+                       TiledDataSource.SOURCE_TYPE: QTiledWidget.TiledBrowser}
 
 NEXUS = True
 try:
@@ -84,6 +88,9 @@ def getSourceType(sourceName0):
     if BlissSpecFile.isBlissSpecFile(sourceName):
         # wrapped as SpecFile
         return SpecFileDataSource.SOURCE_TYPE
+    
+    if TiledDataSource._is_Tiled_Source(sourceName):
+        return TiledDataSource.SOURCE_TYPE
     
     if sps is not None:
         if sourceName in sps.getspeclist():
