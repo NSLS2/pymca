@@ -26,7 +26,7 @@ from qtpy.QtWidgets import (
     QWidget,
 )
 from PyMca5.PyMcaGui import PyMcaQt as qt
-from PyMca5.PyMcaGui.io import TiledDataChannelTable
+from PyMca5.PyMcaGui.io import TiledDataChannelTable, QSourceSelector
 
 from tiled.client import from_uri
 from tiled.client.array import DaskArrayClient
@@ -267,6 +267,46 @@ class TiledBrowser(qt.QMainWindow):
         else:
             self.connection_label.setText(f"Connected to {url}")
             self.set_root(root)
+            # sigSourceSelectorSignal.emit(
+            #     {
+            #         "event": "NewSourceSelected",
+            #         "sourcelist": url,
+            #     }
+            # )
+
+    def setDataSource(self, data):
+        self.data = data
+        # self.data.sigUpdated.connect(self._update)
+
+        dataObject = self._getDataObject()
+        # self.graphWidget.setImageData(dataObject.data)
+        self.lastDataObject = dataObject
+
+    def _update(self, ddict):
+        # targetwidgetid = ddict.get('targetwidgetid', None)
+        # if targetwidgetid not in [None, id(self)]:
+        #     return
+        # dataObject = self._getDataObject(ddict['Key'],
+        #                                 selection=None)
+        # if dataObject is not None:
+        #     self.graphWidget.setImageData(dataObject.data)
+        #     self.lastDataObject = dataObject
+        ...
+
+    def _getDataObject(self, key=None, selection=None):
+        if key is None:
+            # key = self.info['Key']
+            print('deal with later')
+        dataObject = self.data.getDataObject(key,
+                                             selection=None,
+                                             poll=False)
+        # if dataObject is not None:
+        #     dataObject.info['legend'] = self.info['Key']
+        #     dataObject.info['imageselection'] = False
+        #     dataObject.info['scanselection'] = False
+        #     dataObject.info['targetwidgetid'] = id(self)
+        #     self.data.addToPoller(dataObject)
+        return dataObject
 
     def setData(self, filedata):
         self.data = filedata

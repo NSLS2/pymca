@@ -21,12 +21,13 @@ class TiledDataSource(object):
     """
 
     def __init__(self, nameInput):
+        print("-------- TiledDataSource init")
         if isinstance(nameInput, list):
             nameList = nameInput
         else:
             nameList = [nameInput]
         self.sourceName = nameList
-        self.source_type = SOURCE_TYPE
+        self.sourceType = SOURCE_TYPE
         self.__sourceNameList = self.sourceName
         self.refresh()
 
@@ -49,7 +50,7 @@ class TiledDataSource(object):
     
     def _set_data_channel_selection(self):
         """Retrieve Data Channel Selections from Tiled Data Channel Table."""
-        
+        print("-------- TiledDataSource _set_data_channel_selection")
         channel_sel = TiledDataChannelTable.getChannelSelection()
         self.chan_sel = {
             'x': channel_sel['x'],
@@ -72,7 +73,7 @@ class TiledDataSource(object):
     
     def get_data_object(self, key, selection=None):
         """Generate a dataObject that will be used to plot scan data."""
-        
+        print("-------- TiledDataSource get_data_object")
         dataObject = DataObject.DataObject()
         dataObject.info = self._get_key_info(selection)
         dataObject.data = key['selection']

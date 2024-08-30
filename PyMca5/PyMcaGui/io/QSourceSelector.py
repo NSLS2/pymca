@@ -342,7 +342,12 @@ class QSourceSelector(qt.QWidget):
 
     def tiledConnection(self):
         """When 'bluesky' icon clicked it opens the TiledBrowser in the Tiled Tab"""
-        ddict = {"event": "Open Tiled Tab"}
+        # ddict = {"event": "Open Tiled Tab"}
+        url = "https://tiled-demo.blueskyproject.io/api"
+        ddict = {
+            "event": "NewSourceSelected",
+            "sourcelist": url,
+        }
         self.sigSourceSelectorSignal.emit(ddict)
 
         # Potentially add a authorization window when clicked

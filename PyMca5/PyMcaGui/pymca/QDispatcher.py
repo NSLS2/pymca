@@ -75,6 +75,7 @@ class QDispatcher(qt.QWidget):
 
         #for the time being just files
         for src_widget in QDataSource.source_widgets.keys():
+            print(f"{QDataSource.source_widgets = }")
             self.selectorWidget[src_widget] = QDataSource.source_widgets[src_widget]()
             self.tabWidget.addTab(self.selectorWidget[src_widget], src_widget)
             self.selectorWidget[src_widget].sigAddSelection.connect( \
@@ -253,6 +254,8 @@ class QDispatcher(qt.QWidget):
             source = QDataSource.QDataSource(ddict["sourcelist"])
             self.sourceList.append(source)
             sourceType = source.sourceType
+            print(f"{sourceType = }")
+            print(f"{source = }")
             self.selectorWidget[sourceType].setDataSource(source)
             self.tabWidget.setCurrentWidget(self.selectorWidget[sourceType])
             #if sourceType == "SPS":
