@@ -5,10 +5,12 @@ import sys
 from PyMca5.PyMcaCore import DataObject
 from PyMca5.PyMcaGui.io.TiledDataChannelTable import TiledDataChannelTable
 from PyMca5.PyMcaGui.io.QTiledWidget import TiledBrowser
+from PyMca5.PyMcaGui.pymca import QSource
+
 
 SOURCE_TYPE = 'Tiled'
 
-class TiledDataSource(object):
+class QTiledDataSource(QSource.QSource):
     """
     Creates instance of a Tiled Data Source class. This is neccesary
     to create a Tiled Tab in the QDispatcher, which houses the Tiled
@@ -21,7 +23,8 @@ class TiledDataSource(object):
     """
 
     def __init__(self, nameInput):
-        print("-------- TiledDataSource init")
+        print("-------- QTiledDataSource init")
+        super().__init__()
         if isinstance(nameInput, list):
             nameList = nameInput
         else:
@@ -50,7 +53,7 @@ class TiledDataSource(object):
     
     def _set_data_channel_selection(self):
         """Retrieve Data Channel Selections from Tiled Data Channel Table."""
-        print("-------- TiledDataSource _set_data_channel_selection")
+        print("-------- QTiledDataSource _set_data_channel_selection")
         channel_sel = TiledDataChannelTable.getChannelSelection()
         self.chan_sel = {
             'x': channel_sel['x'],
@@ -73,7 +76,7 @@ class TiledDataSource(object):
     
     def get_data_object(self, key, selection=None):
         """Generate a dataObject that will be used to plot scan data."""
-        print("-------- TiledDataSource get_data_object")
+        print("-------- QTiledDataSource get_data_object")
         dataObject = DataObject.DataObject()
         dataObject.info = self._get_key_info(selection)
         dataObject.data = key['selection']
@@ -104,7 +107,7 @@ def _is_Tiled_Source(filename):
     except Exception:
         return False
     
-source_types = {SOURCE_TYPE: TiledDataSource}
+source_types = {SOURCE_TYPE: QTiledDataSource}
 
 def DataSource(name="", source_type=SOURCE_TYPE):
   try:
@@ -121,10 +124,10 @@ if __name__ == "__main__":
         sourcename = sys.argv[1]
         key = sys.argv[2]
     except Exception:
-        print("Usage: TiledDataSource <file> <key>")
+        print("Usage: QTiledDataSource <file> <key>")
         sys.exit()
     #one can use this:
-    obj = TiledDataSource(sourcename)
+    obj = QTiledDataSource(sourcename)
     #or this:
     obj = DataSource(sourcename)
     #data = obj.getData(key,selection={'pos':(10,10),'size':(40,40)})

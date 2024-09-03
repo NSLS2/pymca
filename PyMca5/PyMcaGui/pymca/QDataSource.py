@@ -38,7 +38,7 @@ QTVERSION = qt.qVersion()
 
 from PyMca5.PyMcaCore import SpecFileDataSource
 from PyMca5.PyMcaCore import EdfFileDataSource
-from PyMca5.PyMcaCore import TiledDataSource
+from PyMca5.PyMcaCore import QTiledDataSource
 from PyMca5.PyMcaIO import BlissSpecFile
 from PyMca5.PyMcaGui.io import QEdfFileWidget
 from PyMca5.PyMcaGui.io import QSpecFileWidget
@@ -58,12 +58,12 @@ else:
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource,
                      QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource,
-                     TiledDataSource.SOURCE_TYPE: TiledDataSource.TiledDataSource}
+                     QTiledDataSource.SOURCE_TYPE: QTiledDataSource.QTiledDataSource}
 
     source_widgets = { SpecFileDataSource.SOURCE_TYPE: QSpecFileWidget.QSpecFileWidget,
                        EdfFileDataSource.SOURCE_TYPE: QEdfFileWidget.QEdfFileWidget,
                        QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget,
-                       TiledDataSource.SOURCE_TYPE: QTiledWidget.TiledBrowser}
+                       QTiledDataSource.SOURCE_TYPE: QTiledWidget.TiledBrowser}
 
 NEXUS = True
 try:
@@ -89,8 +89,8 @@ def getSourceType(sourceName0):
         # wrapped as SpecFile
         return SpecFileDataSource.SOURCE_TYPE
     
-    if TiledDataSource._is_Tiled_Source(sourceName):
-        return TiledDataSource.SOURCE_TYPE
+    if QTiledDataSource._is_Tiled_Source(sourceName):
+        return QTiledDataSource.SOURCE_TYPE
     
     if sps is not None:
         if sourceName in sps.getspeclist():
@@ -165,7 +165,7 @@ def getSourceType(sourceName0):
         sourceName.startswith(r"http:/") or \
         sourceName.startswith(r"https:/"):
         # only chance is to use silx via an h5py-like API
-        return TiledDataSource.SOURCE_TYPE
+        return QTiledDataSource.SOURCE_TYPE
     else:
         return QSpsDataSource.SOURCE_TYPE
 
