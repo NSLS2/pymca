@@ -38,9 +38,11 @@ QTVERSION = qt.qVersion()
 
 from PyMca5.PyMcaCore import SpecFileDataSource
 from PyMca5.PyMcaCore import EdfFileDataSource
+from PyMca5.PyMcaCore import QTiledDataSource
 from PyMca5.PyMcaIO import BlissSpecFile
 from PyMca5.PyMcaGui.io import QEdfFileWidget
 from PyMca5.PyMcaGui.io import QSpecFileWidget
+from PyMca5.PyMcaGui.io import QTiledWidget
 
 if sys.platform == "win32":
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
@@ -55,11 +57,13 @@ else:
     from PyMca5.PyMcaGui.io import QSpsWidget
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource,
-                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource}
+                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource,
+                     QTiledDataSource.SOURCE_TYPE: QTiledDataSource.QTiledDataSource}
 
     source_widgets = { SpecFileDataSource.SOURCE_TYPE: QSpecFileWidget.QSpecFileWidget,
                        EdfFileDataSource.SOURCE_TYPE: QEdfFileWidget.QEdfFileWidget,
-                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget}
+                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget,
+                       QTiledDataSource.SOURCE_TYPE: QTiledWidget.TiledBrowser}
 
 NEXUS = True
 try:
@@ -84,6 +88,9 @@ def getSourceType(sourceName0):
     if BlissSpecFile.isBlissSpecFile(sourceName):
         # wrapped as SpecFile
         return SpecFileDataSource.SOURCE_TYPE
+    
+    if QTiledDataSource._is_Tiled_Source(sourceName):
+        return QTiledDataSource.SOURCE_TYPE
     
     if sps is not None:
         if sourceName in sps.getspeclist():
@@ -154,6 +161,11 @@ def getSourceType(sourceName0):
                 except Exception:
                     pass
             return SpecFileDataSource.SOURCE_TYPE
+    elif sourceName.startswith("tiled:") or \
+        sourceName.startswith(r"http:/") or \
+        sourceName.startswith(r"https:/"):
+        # only chance is to use silx via an h5py-like API
+        return QTiledDataSource.SOURCE_TYPE
     else:
         return QSpsDataSource.SOURCE_TYPE
 

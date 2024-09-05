@@ -3585,6 +3585,44 @@ file_save = ["22 22 5 1",
 "..##################..",
 "......................"]
 
+bluesky = [
+"32 32 2 1 ",
+"  c None",
+"B c #87CEEB",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"             BBBBBBB            ",
+"             BBBBBBB            ",
+"          BBBBBBBBBBBBBB        ",
+"          BBBBBBBBBBBBBB        ",
+"       BBBBBBBBBBBBBBBBBB       ",
+"   BBBBBBBBBBBBBBBBBBB BBB      ",
+"   BBBBBBBBBBBBBBBBBBB BBB      ",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBBBB ",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBBBB ",
+"  BBBBBBBBBBBBBBBBBBBB  BBBB  BB",
+"  BBBBBBBBBBBBBBBBBBBB  BBBB  BB",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBB BB",
+"  BBBBBBBBBBBBBBBBBBBB BBBBBB BB",
+"   BBBBBBBBBBBBBBBBBBBB BBBB BB ",
+"   BBBBBBBBBBBBBBBBBBBB BBBB BB ",
+"     BBBBBBBBBBBBBBBBBBBBBBBBB  ",
+"     BBBBBBBBBBBBBBBBBBBBBBBBB  ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+"                                ",
+]
+
 
 
 IconDict0 = {
@@ -3597,6 +3635,7 @@ IconDict0 = {
     "fileprint": image_print_data,
     "spec": spec,
     "bliss": bliss,
+    "bluesky": bluesky,
     "normal": normal,
     "normalize16": normalize16,
     "reload": reload_,
@@ -3826,7 +3865,6 @@ class _PatchedIconDict(MutableMapping):
 
 IconDict = _PatchedIconDict(IconDict0)
 
-
 def change_icons(plot):
     """Replace some of the silx icons with PyMca icons.
 
@@ -3837,7 +3875,6 @@ def change_icons(plot):
     plot.getRoiAction().setIcon(qt.QIcon(qt.QPixmap(IconDict["roi"])))
     if hasattr(plot, "printPreview"):
         plot.printPreview.setIcon(qt.QIcon(qt.QPixmap(IconDict["fileprint"])))
-
 
 def showIcons():
     w = qt.QWidget()
