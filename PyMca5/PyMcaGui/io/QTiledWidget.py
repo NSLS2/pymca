@@ -252,6 +252,8 @@ class TiledBrowser(qt.QMainWindow):
         self.previous_search_text = ''
         self.key_to_uid = {}
 
+        self.selection = None
+
     def _on_connect_clicked(self):
         url = self.url_entry.displayText().strip()
         # url = "https://tiled-demo.blueskyproject.io/api"
@@ -277,10 +279,12 @@ class TiledBrowser(qt.QMainWindow):
     def setDataSource(self, data):
         self.data = data
         # self.data.sigUpdated.connect(self._update)
+        selection = self.set_data_source_key()
 
-        dataObject = self._getDataObject()
-        # self.graphWidget.setImageData(dataObject.data)
-        self.lastDataObject = dataObject
+        if selection is not None:
+            dataObject = self._getDataObject(selection=selection)
+            # self.graphWidget.setImageData(dataObject.data)
+            self.lastDataObject = dataObject
 
     def _update(self, ddict):
         # targetwidgetid = ddict.get('targetwidgetid', None)
@@ -308,8 +312,8 @@ class TiledBrowser(qt.QMainWindow):
         #     self.data.addToPoller(dataObject)
         return dataObject
 
-    def setData(self, filedata):
-        self.data = filedata
+    def setData(self, node):
+        self.data = node
         self.refreshData()
 
     def refreshData(self):
@@ -320,7 +324,8 @@ class TiledBrowser(qt.QMainWindow):
         
     def set_data_source_key(self):
         if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
-            return self.root[self.node_path]
+            self.selection = self.root[self.node_path]
+            return self.selection
 
     def set_root(self, root):
         self.root = root
@@ -344,15 +349,16 @@ class TiledBrowser(qt.QMainWindow):
         return self.root
 
     def enter_node(self, node_id):
-        if 'raw' in self.node_path:
-            self.node_path += (node_id,)
+        print(f"{self.node_path = }")
+        print(f"{node_id = }")
+        self.node_path += (node_id,)
+        self._current_page = 0
+        self._rebuild()
+        # avoid populating data channels table if not in a scan
+        if 'raw' in self.node_path and self.node_path[-1] != 'raw':
             rawDataChannels = tuple(self.get_current_node().items())
             dataChannels = [channel[0] for channel in rawDataChannels]
             self.data_channels_table.build_table(dataChannels)
-        else:
-            self.node_path += (node_id,)
-            self._current_page = 0
-            self._rebuild()
 
     def exit_node(self):
         self.node_path = self.node_path[:-1]
@@ -388,8 +394,8 @@ class TiledBrowser(qt.QMainWindow):
 
     def _on_rows_per_page_changed(self, value):
         # If scan already selected
-        if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
-            self.node_path = self.node_path[:-1]
+        # if 'raw' in self.node_path and 'raw' != self.node_path[-1]:
+        #     self.node_path = self.node_path[:-1]
 
         self._rows_per_page = int(value)
         self._current_page = 0
@@ -707,7 +713,7 @@ class TiledBrowser(qt.QMainWindow):
             if len(channel_sel['y']):
                 # TODO: find was to give self.data a SourceName method.
                 sel = {
-                    'SourceName': self.data.SourceName,
+                    'SourceName': self.data.sourceName,
                     'SourceType': self.data.sourceType,
                     'selection': {'x': channel_sel['x'],
                                    'y': channel_sel['y'],

@@ -36,12 +36,21 @@ class QTiledDataSource(QSource.QSource):
 
     def refresh(self):
         pass
-       
 
-    def _set_key(self):
+    def getDataObject(self, key_list, selection=None, poll=False):
+        if type(key_list) not in [type([])]:
+            nolist = True
+            key_list = [key_list]
+        else:
+            output = []
+            nolist = False
+        data = self.get_data_object(key_list, selection=selection)
+
+        return data
+
+    def _set_key(self, selection=None):
         """Sets key once a scan has been selected in Tiled Browser."""
         
-        selection = TiledBrowser.set_data_source_key()
         key = {
             "scan": selection.metadata['start']['uid'],
             "scan_id": selection.metadata['start']['scan_id'],
@@ -65,7 +74,7 @@ class QTiledDataSource(QSource.QSource):
     def _get_key_info(self, selection):
         """Retrives key info."""
 
-        key = self._set_key()
+        key = self._set_key(selection=selection)
         key_info = {
             "SourceType": SOURCE_TYPE,
             "selection": selection,
