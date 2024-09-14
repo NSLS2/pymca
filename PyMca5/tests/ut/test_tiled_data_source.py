@@ -24,15 +24,21 @@ def test_getDataObject():
     source.getDataObject("This key value is not used by this test")
 
 
-@pytest.mark.xfail(reason="DataObject fields not yet defined")
 def test_getDataObject_values():
     """TiledDataSourceg.getDataObject method returns a valid DataObject."""
     source = TiledDataSource()
+
     data = source.getDataObject("This key value is not used by this test")
     assert isinstance(data, DataObject)
+
     info = data.info
-    assert isinstance(info["LabelNames"], abc.Sequence[str])
+
+    labels = info["LabelNames"]
+    assert isinstance(labels, abc.Sequence)
+    assert all(isinstance(label, str) for label in labels)
+
     info["selection"]
+
     sel_type = info["selectiontype"]
     assert isinstance(sel_type, str)
     allowed_types = ("1D",)

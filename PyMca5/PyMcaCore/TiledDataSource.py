@@ -1,3 +1,5 @@
+import copy
+
 from .DataObject import DataObject
 
 
@@ -8,7 +10,18 @@ class TiledDataSource(object):
     """Manages a Tiled CatalogOfBlueskyRuns as a PyMca Data Source"""
     def getDataObject(self, key: str, selection=None):
         """Return data associated with 'key' and optional 'selection'."""
-        return DataObject()
+        data = DataObject()
+        labels = ()
+        if selection is not None:
+            labels = selection["Channel List"].copy()
+        data.info = {
+            # For now, only allow one-dimensional data arrays
+            "selectiontype": "1D",
+            "selection": copy.deepcopy(selection),
+            "LabelNames": labels,
+        }
+
+        return data
 
     def refresh(self):
         ...
