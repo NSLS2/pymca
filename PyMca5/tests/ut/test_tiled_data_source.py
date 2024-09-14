@@ -1,12 +1,28 @@
 import enable_pymca_import  # noqa: F401
 import pytest
 
+from PyMca5.PyMcaCore.DataObject import DataObject
 from PyMca5.PyMcaCore.TiledDataSource import TiledDataSource
 
 
 def test_init():
     """Can create a TiledDataSource object."""
     TiledDataSource()
+
+
+@pytest.mark.xfail(reason="Method not yet needed")
+def test_getDataObject():
+    """TiledDataSource has a callable getDataObject method."""
+    source = TiledDataSource()
+    source.getDataObject("This key value is not used by this test")
+
+
+@pytest.mark.xfail(reason="Method not yet needed")
+def test_getDataObject_values():
+    """TiledDataSourceg.getDataObject method returns a valid DataObject."""
+    source = TiledDataSource()
+    data = source.getDataObject("This key value is not used by this test")
+    assert isinstance(data, DataObject)
 
 ###############################################################################
 # OPTIONAL METHODS
