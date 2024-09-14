@@ -1,3 +1,5 @@
+from collections import abc
+
 import enable_pymca_import  # noqa: F401
 import pytest
 
@@ -22,11 +24,19 @@ def test_getDataObject():
     source.getDataObject("This key value is not used by this test")
 
 
+@pytest.mark.xfail(reason="DataObject fields not yet defined")
 def test_getDataObject_values():
     """TiledDataSourceg.getDataObject method returns a valid DataObject."""
     source = TiledDataSource()
     data = source.getDataObject("This key value is not used by this test")
     assert isinstance(data, DataObject)
+    info = data.info
+    assert isinstance(info["LabelNames"], abc.Sequence[str])
+    info["selection"]
+    sel_type = info["selectiontype"]
+    assert isinstance(sel_type, str)
+    allowed_types = ("1D",)
+    assert sel_type in allowed_types
 
 ###############################################################################
 # OPTIONAL METHODS
