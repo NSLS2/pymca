@@ -7,7 +7,7 @@
     By default PyMca5 cannot be imported when called from a source directory.
     Import _this_ module before importing PyMca5 or one of its submodules
     to bypass that limitation, or override this behavior
-    by setting the environment varriable ALLOW_PYMCA_IMPORT.
+    by setting the environment variable ALLOW_PYMCA_IMPORT.
 
     Examples:
 
@@ -31,9 +31,9 @@
     ALLOW_PYMCA_IMPORT=TRUE python -m pytest
     ```
 
-    Tests that are nested within the PyMca5 module must be in a directory
-    that does NOT contain an __init__.py file. Otherwise, pytest
-    will attempt to import PyMca5 before the tests are collected.
+    Tests that are nested within the PyMca5 module must have a parent directory
+    that does NOT contain an __init__.py file. Otherwise, pytest will attempt
+    to import PyMca5 before the tests are collected.
 """
 
 import os
