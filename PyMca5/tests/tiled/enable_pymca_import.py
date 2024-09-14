@@ -31,8 +31,9 @@
     ALLOW_PYMCA_IMPORT=TRUE python -m pytest
     ```
 
-    Tests that use enable_pymca_import must be in a directory
-    that does NOT contain an __init__.py file.
+    Tests that want to import PyMca5 must be in a directory
+    that does NOT contain an __init__.py file. Otherwise, pytest
+    will attempt to import PyMca5 before the tests are collected.
 """
 
 import os
