@@ -2,12 +2,18 @@ import enable_pymca_import  # noqa: F401
 import pytest
 
 from PyMca5.PyMcaCore.DataObject import DataObject
-from PyMca5.PyMcaCore.TiledDataSource import TiledDataSource
+from PyMca5.PyMcaCore.TiledDataSource import SOURCE_TYPE, TiledDataSource
 
 
 def test_init():
     """Can create a TiledDataSource object."""
     TiledDataSource()
+
+
+def test_source_type():
+    """TiledDataSource.SOURCE_TYPE is defined and contains "tiled"."""
+    assert isinstance(SOURCE_TYPE, str)
+    assert "tiled" in SOURCE_TYPE.lower()
 
 
 def test_getDataObject():
@@ -49,7 +55,7 @@ def test_getSourceInfo_values():
     info = source.getSourceInfo()
     # These fields are generally defined by other DataSources
     info["SourceName"]
-    info["SourceType"]
+    assert info["SourceType"] == SOURCE_TYPE
     info["KeyList"]
     info["Size"]
 
@@ -68,5 +74,5 @@ def test_getKeyInfo_values():
     info = source.getKeyInfo("This key value is not used by this test")
     # These fields are generally defined by other DataSources
     info["SourceName"]
-    info["SourceType"]
+    assert info["SourceType"] == SOURCE_TYPE
     info["Key"]
