@@ -31,7 +31,7 @@
     ALLOW_PYMCA_IMPORT=TRUE python -m pytest
     ```
 
-    Tests that want to import PyMca5 must be in a directory
+    Tests that are nested within the PyMca5 module must be in a directory
     that does NOT contain an __init__.py file. Otherwise, pytest
     will attempt to import PyMca5 before the tests are collected.
 """
