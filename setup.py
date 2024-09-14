@@ -878,6 +878,10 @@ if use_gui():
                          "PyQt5",   # either PySide6 or PySide2 supported too
                         ]
 
+extras_require = {
+    "dev": ["pytest"],
+}
+
 setup_requires = ["numpy"]
 
 distrib = setup(name="PyMca5",
@@ -898,6 +902,7 @@ distrib = setup(name="PyMca5",
                 scripts=script_files,
                 classifiers=classifiers,
                 install_requires=install_requires,
+                extras_require=extras_require,
                 setup_requires=setup_requires,
                 )
 
