@@ -24,7 +24,6 @@ def test_getDataObject():
     source.getDataObject("This key value is not used by this test")
 
 
-@pytest.mark.xfail(reason="Data selections not yet defined")
 def test_getDataObject_values():
     """TiledDataSourceg.getDataObject method returns a valid DataObject."""
     source = TiledDataSource()

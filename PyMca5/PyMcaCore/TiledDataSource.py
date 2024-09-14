@@ -20,6 +20,9 @@ class TiledDataSource(object):
             "selection": copy.deepcopy(selection),
             "LabelNames": labels,
         }
+        data.x = ()
+        data.y = ()
+        data.m = ()
 
         return data
 
