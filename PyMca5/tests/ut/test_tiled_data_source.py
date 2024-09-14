@@ -10,14 +10,12 @@ def test_init():
     TiledDataSource()
 
 
-@pytest.mark.xfail(reason="Method not yet needed")
 def test_getDataObject():
     """TiledDataSource has a callable getDataObject method."""
     source = TiledDataSource()
     source.getDataObject("This key value is not used by this test")
 
 
-@pytest.mark.xfail(reason="Method not yet needed")
 def test_getDataObject_values():
     """TiledDataSourceg.getDataObject method returns a valid DataObject."""
     source = TiledDataSource()
