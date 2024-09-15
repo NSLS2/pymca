@@ -879,7 +879,10 @@ if use_gui():
                         ]
 
 extras_require = {
-    "dev": ["pytest"],
+    "dev": [
+        "pytest",
+        "pytest-qt",
+    ],
 }
 
 setup_requires = ["numpy"]
