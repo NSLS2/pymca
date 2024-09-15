@@ -4,16 +4,21 @@ from PyQt5.QtWidgets import (
     QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget,
 )
 
+from .TiledCatalogSelector import TiledCatalogSelector
+
+
 class QTiledCatalogSelectorDialog(QDialog):
     """A dialog window to find and select a Tiled CatalogOfBlueskyRuns."""
     def __init__(
         self,
+        model: TiledCatalogSelector,
         parent: Optional[QWidget] = None,
         *args,
         **kwargs,
     ) -> None:
         """Initialize..."""
         super().__init__(parent, *args, **kwargs)
+        self.model = model
         self.create_layout()
 
     def create_layout(self) -> None:
@@ -31,3 +36,4 @@ class QTiledCatalogSelectorDialog(QDialog):
         connection_layout.addWidget(self.connection_label)
         connection_layout.addStretch()
         self.setLayout(connection_layout)
+        
