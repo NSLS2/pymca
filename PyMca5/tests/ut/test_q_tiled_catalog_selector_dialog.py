@@ -3,13 +3,15 @@ import enable_pymca_import  # noqa: F401
 import pytest
 from pytestqt.qtbot import QtBot
 
+from PyQt5.QtWidgets import QApplication
+
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
 from PyMca5.PyMcaGui.io.QTiledCatalogSelectorDialog import QTiledCatalogSelectorDialog
 
 
 @pytest.fixture
-def dialog_model():
-    model = TiledCatalogSelector()
+def dialog_model(qapp: QApplication):
+    model = TiledCatalogSelector(parent=qapp)
     yield model
 
 
