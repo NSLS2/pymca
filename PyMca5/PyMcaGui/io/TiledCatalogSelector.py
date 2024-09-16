@@ -65,12 +65,13 @@ class TiledCatalogSelector(object):
         self.url = self._url_buffer
         self._url_buffer = None
 
-    def on_connect_clicked(self, checked: bool):
+    def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
         try:
-            new_client = from_uri(self.url)
+            new_client = self.client_from_url(self.url)
         except Exception as exception:
-            _logger.info(exception.msg)
+            _logger.info(str(exception))
+            # TODO: SHould we re-raise the exception or emit a signal to inform the viewer?
             return
 
         if self.client:
@@ -80,6 +81,11 @@ class TiledCatalogSelector(object):
         self.client = new_client
         self.client_connected.emit(self.client.uri, self.client.context.api_uri)
 
+    @staticmethod
+    def client_from_url(url: str):
+        """Create a Tiled client that is connected to the requested URL."""
+        return from_uri(url)
+
 
 def urlparse(url: str) -> ParseResult:
     """Re-raise URL parsing errors with an extra custom message."""
@@ -87,6 +93,16 @@ def urlparse(url: str) -> ParseResult:
         url_parts = _urlparse(url)
     except ValueError as exception:
         raise ValueError(f'{url} is not a valid URL.') from exception
+    
+    if not url_parts.scheme:
+        raise ValueError(
+            f'{url} is not a valid URL. URL must include a scheme.'
+        )
+    
+    if not url_parts.netloc:
+        raise ValueError(
+            f'{url} is not a valid URL. URL must include a network location.'
+        )
     
     return url_parts
 
