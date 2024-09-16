@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from typing import Callable, Mapping, Optional
 
@@ -7,6 +8,9 @@ from PyQt5.QtWidgets import (
 )
 
 from .TiledCatalogSelector import TiledCatalogSelector
+
+
+_logger = logging.getLogger(__name__)
 
 
 class PassThroughEventFilter(QObject):
@@ -48,6 +52,8 @@ class QTiledCatalogSelectorDialog(QDialog):
         **kwargs,
     ) -> None:
         """Initialize..."""
+        _logger.debug("QTiledCatalogSelectorDialog.__init__()...")
+
         super().__init__(parent, *args, **kwargs)
         self.model = model
         self.create_layout()
@@ -56,6 +62,8 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def create_layout(self) -> None:
         """Create the visual layout of widgets for the dialog."""
+        _logger.debug("QTiledCatalogSelectorDialog.create_layout()...")
+
         # Connection elements
         self.url_entry = QLineEdit()
         self.reset_url_entry()
@@ -72,6 +80,8 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def reset_url_entry(self) -> None:
         """Reset the stated of the url_entry widget."""
+        _logger.debug("QTiledCatalogSelectorDialog.reset_url_entry()...")
+
         if not self.model.url:
             self.url_entry.setPlaceholderText("Enter a url")
         else:
@@ -79,6 +89,8 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def connect_model_signals(self):
         """Connect dialog slots to model signals."""
+        _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
+
         @self.model.client_connected.connect
         def on_client_connected(url: str, api_url: str):
             self.connection_label.setText(f"Connected to {url}")
@@ -86,9 +98,11 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def connect_model_slots(self):
         """Connect model slots to dialog signals."""
+        _logger.debug("QTiledCatalogSelectorDialog.connect_model_slots()...")
+
         model = self.model
         urlFocusInFilter = PassThroughEventFilter(
-            handlers={QLineEdit.focusInEvent: model.on_url_focus_in_event},
+            handlers={QEvent.Type.FocusIn: model.on_url_focus_in_event},
             parent=self,
         )
         self.url_entry.installEventFilter(urlFocusInFilter)

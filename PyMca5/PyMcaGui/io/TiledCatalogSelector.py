@@ -38,6 +38,8 @@ class TiledCatalogSelector(object):
         *args,
         **kwargs,
     ):
+        _logger.debug("TiledCatalogSelector.__init__()...")
+
         self.url = url
         self.client = client
         self.validators = defaultdict(list)
@@ -47,14 +49,20 @@ class TiledCatalogSelector(object):
 
     def on_url_focus_in_event(self, event: QEvent):
         """Handle the event when the URL widget gains focus."""
+        _logger.debug("TiledCatalogSelector.on_url_focus_in_event()...")
+
         self._url_buffer = None
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
+        _logger.debug("TiledCatalogSelector.on_url_text_edited()...")
+
         self._url_buffer = new_text
 
     def on_url_editing_finished(self):
         """Handle a notification that URL editing is complete."""
+        _logger.debug("TiledCatalogSelector.on_url_editing_finished()...")
+
         try:
             for validate in self.validators["url"]:
                 validate(self._url_buffer)
@@ -62,11 +70,14 @@ class TiledCatalogSelector(object):
             _logger.info(exception.msg)
             return
         
-        self.url = self._url_buffer
-        self._url_buffer = None
+        if getattr(self, "_url_buffer", None) is not None:
+            self.url = self._url_buffer
+            self._url_buffer = None
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
+        _logger.debug("TiledCatalogSelector.on_connect_clicked()...")
+
         try:
             new_client = self.client_from_url(self.url)
         except Exception as exception:
@@ -84,6 +95,8 @@ class TiledCatalogSelector(object):
     @staticmethod
     def client_from_url(url: str):
         """Create a Tiled client that is connected to the requested URL."""
+        _logger.debug("TiledCatalogSelector.client_from_url()...")
+
         return from_uri(url)
 
 
