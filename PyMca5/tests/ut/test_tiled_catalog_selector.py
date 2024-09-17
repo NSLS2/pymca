@@ -89,8 +89,8 @@ def test_on_url_editing_finished():
 
 def test_on_connect_clicked():
     """Event handler updates client with connection to the url, emits Qt signal."""
-    expected_url = "URL is not used here"
-    expected_api_url = "API URL is not used here"
+    expected_url = "URL for connection"
+    expected_api_url = "API URL extracted by client"
     model = TiledCatalogSelector(url=expected_url)
 
     with patch.object(model, "client_from_url") as mock_client_constructor:
@@ -116,10 +116,19 @@ def test_on_connect_exception(caplog: pytest.LogCaptureFixture):
 
     with patch.object(model, "client_from_url") as mock_client_constructor:
         mock_client_constructor.side_effect = Exception(expected_message)
-        model.on_connect_clicked()
+
+        with patch.object(model, "client_connection_error") as mock_signal:
+            mock_signal.emit = Mock()
+            model.on_connect_clicked()
 
     assert expected_message in caplog.messages
     assert model.client is client
+
+    mock_signal.emit.assert_called_once()
+    call_args = mock_signal.emit.call_args
+    assert (len(call_args.args) + len(call_args.kwargs)) == 1
+    (error_message, ) = call_args.args + tuple(call_args.kwargs.values())
+    assert isinstance(error_message, str)
 
 
 @pytest.mark.parametrize(
@@ -158,6 +167,7 @@ def test_syntax_validator(url: str, expected_context):
 def test_scheme_validator(url: str, expected_context, valid_schemes: Sequence[str]):
     """Validate the scheme of the URL against valid_schemes."""
     kwargs = {"valid_schemes": valid_schemes} if valid_schemes else {}
+
     with expected_context:
         validate_url_scheme(url, **kwargs)
 
@@ -182,10 +192,20 @@ def test_validation_on_url_editing_finished(
     model = TiledCatalogSelector(url="before", validators=validators)
     model.url_buffer = url
 
-    model.on_url_editing_finished()
+    with patch.object(model, "url_validation_error") as mock_signal:
+        mock_signal.emit = Mock()
+        model.on_url_editing_finished()
+
     assert model.url == expected_url
 
     if model.url == "before":
         # URL was not updated because its scheme was not valid
         assert " is not a valid URL." in caplog.text
         assert "URL must include a scheme." in caplog.text
+
+        mock_signal.emit.assert_called_once()
+        call_args = mock_signal.emit.call_args
+        assert (len(call_args.args) + len(call_args.kwargs)) == 1
+        (error_message, ) = call_args.args + tuple(call_args.kwargs.values())
+        assert " is not a valid URL." in error_message
+        assert "URL must include a scheme." in error_message
