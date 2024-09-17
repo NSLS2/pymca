@@ -19,6 +19,14 @@ class TiledCatalogSelectorSignals(QObject):
         str, # new API URL
         name="TiledCatalogSelector.client_connected",
     )
+    client_connection_error = pyqtSignal(
+        str, # Error message
+        name="TiledCatalogSelector.client_connection_error",
+    )
+    url_validation_error = pyqtSignal(
+        str, # Error message
+        name="TiledCatalogSelector.url_validation_error",
+    )
     
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
@@ -48,6 +56,8 @@ class TiledCatalogSelector(object):
 
         self.signals = self.Signals(parent)
         self.client_connected = self.signals.client_connected
+        self.client_connection_error = self.signals.client_connection_error
+        self.url_validation_error = self.signals.url_validation_error
 
         # A buffer to receive updates while the URL is being edited
         self.url_buffer = None
@@ -77,8 +87,9 @@ class TiledCatalogSelector(object):
             for validate in self.validators["url"]:
                 validate(new_url)
         except ValueError as exception:
-            _logger.info(str(exception))
-            # TODO: Should we re-raise the exception or emit a signal to inform the viewer?
+            error_message = str(exception)
+            _logger.error(error_message)
+            self.url_validation_error.emit(error_message)
             return
         
         self.url = new_url
@@ -91,8 +102,9 @@ class TiledCatalogSelector(object):
         try:
             new_client = self.client_from_url(self.url)
         except Exception as exception:
-            _logger.info(str(exception))
-            # TODO: Should we re-raise the exception or emit a signal to inform the viewer?
+            error_message = str(exception)
+            _logger.error(error_message)
+            self.client_connection_error.emit(error_message)
             return
 
         if self.client:
