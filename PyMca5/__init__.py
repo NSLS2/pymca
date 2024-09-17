@@ -49,15 +49,16 @@ if sys.platform.startswith("win"):
     from ctypes.wintypes import MAX_PATH
 
 @returns_bool
-def get_bool_env_var(name: str, value: bool):
+def _get_bool_env_var(name: str, value: bool):
     """Get the named boolean environment variable; else return 'value'."""
     return os.environ.get(name, value)
 
-_ALLOW_PYMCA_IMPORT = get_bool_env_var(
+_IMPORTING_FROM_SOURCE_REPO = os.path.exists(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bootstrap.py')
+)
+_ALLOW_PYMCA_IMPORT = _get_bool_env_var(
     "ALLOW_PYMCA_IMPORT",
-    not os.path.exists(
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bootstrap.py')
-    )
+    not _IMPORTING_FROM_SOURCE_REPO
 )
 if not _ALLOW_PYMCA_IMPORT:
     raise ImportError('PyMca cannot be imported from source directory')
