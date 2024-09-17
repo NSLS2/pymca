@@ -39,6 +39,7 @@ class PassThroughEventFilter(QObject):
     ) -> bool:
         """Respond to the event and then pass it to the parent filter."""
         self.handle_event[event.type()](event)
+
         return super().eventFilter(obj, event)
 
 
@@ -94,6 +95,17 @@ class QTiledCatalogSelectorDialog(QDialog):
         @self.model.client_connected.connect
         def on_client_connected(url: str, api_url: str):
             self.connection_label.setText(f"Connected to {url}")
+            # TODO: Display the contents of the Tiled node
+            ...
+
+        @self.model.client_connection_error.connect
+        def on_client_connection_error(error_msg: str):
+            # TODO: Display the error message; suggest a remedy
+            ...
+
+        @self.model.url_validation_error.connect
+        def on_url_validation_error(error_msg: str):
+            # TODO: Display the error message; visual emphasis of url_entry
             ...
 
     def connect_model_slots(self):
