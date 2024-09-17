@@ -28,22 +28,21 @@ def test_init(optional_args: Mapping[str, Any]):
 def test_on_url_focus_in_event():
     """Event handler creates a string buffer for a new url without changing the existing url."""
     expected_url = "before"
-    buffer_name = "_url_buffer"
     model = TiledCatalogSelector(url=expected_url)
     event = Mock()
 
     assert model.url == expected_url
-    assert not hasattr(model, buffer_name)
 
+    model.url_buffer = "Pre-existing content"
     model.on_url_focus_in_event(event)
 
-    assert hasattr(model, buffer_name)
+    assert model.url_buffer is None
     assert model.url == expected_url
 
 
-def test_clear_url_buffer():
+def test_clearurl_buffer():
     """FocusIn event clears the string buffer for a new url."""
-    buffer_name = "_url_buffer"
+    buffer_name = "url_buffer"
     model = TiledCatalogSelector()
     event = Mock()
     setattr(model, buffer_name, "Previously edited URL")
@@ -58,7 +57,7 @@ def test_clear_url_buffer():
 def test_on_url_text_edited():
     """Event handler replaces the url buffer without changing the existing url."""
     expected_url = "before"
-    buffer_name = "_url_buffer"
+    buffer_name = "url_buffer"
     model = TiledCatalogSelector(url=expected_url)
     setattr(model, buffer_name, "")
 
@@ -79,7 +78,7 @@ def test_on_url_text_edited():
 def test_on_url_editing_finished():
     """Event handler replaces the existing url with the contents of the buffer."""
     expected_url = "after"
-    buffer_name = "_url_buffer"
+    buffer_name = "url_buffer"
     model = TiledCatalogSelector(url="before")
     setattr(model, buffer_name, expected_url)
 
@@ -181,7 +180,7 @@ def test_validation_on_url_editing_finished(
     caplog.set_level(logging.INFO)
     validators = {"url": [validate_url_scheme]}
     model = TiledCatalogSelector(url="before", validators=validators)
-    model._url_buffer = url
+    model.url_buffer = url
 
     model.on_url_editing_finished()
     assert model.url == expected_url

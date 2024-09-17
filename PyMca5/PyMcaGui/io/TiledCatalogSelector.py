@@ -49,33 +49,40 @@ class TiledCatalogSelector(object):
         self.signals = self.Signals(parent)
         self.client_connected = self.signals.client_connected
 
+        # A buffer to receive updates while the URL is being edited
+        self.url_buffer = None
+
     def on_url_focus_in_event(self, event: QEvent):
         """Handle the event when the URL widget gains focus."""
         _logger.debug("TiledCatalogSelector.on_url_focus_in_event()...")
 
-        self._url_buffer = None
+        # TODO: Check whether this causes issues under the condition when
+        #       the connection button is clicked before the user
+        #       interacts with the URL text editor.
+        self.url_buffer = None
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
         _logger.debug("TiledCatalogSelector.on_url_text_edited()...")
 
-        self._url_buffer = new_text
+        self.url_buffer = new_text
 
     def on_url_editing_finished(self):
         """Handle a notification that URL editing is complete."""
         _logger.debug("TiledCatalogSelector.on_url_editing_finished()...")
 
+        new_url = str.strip(self.url_buffer or "")
+
         try:
             for validate in self.validators["url"]:
-                validate(self._url_buffer)
+                validate(new_url)
         except ValueError as exception:
             _logger.info(str(exception))
             # TODO: Should we re-raise the exception or emit a signal to inform the viewer?
             return
         
-        if getattr(self, "_url_buffer", None) is not None:
-            self.url = self._url_buffer
-            self._url_buffer = None
+        self.url = new_url
+        self.url_buffer = None
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""

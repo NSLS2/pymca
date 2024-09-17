@@ -82,6 +82,6 @@ def test_url_edit_focus(
     dialog.show()
     qtbot.addWidget(dialog)
 
-    dialog_model._url_buffer = "Some text"
+    dialog_model.url_buffer = "Some text"
     qapp.sendEvent(dialog.url_entry, QEvent(QEvent.Type.FocusIn))
-    assert dialog_model._url_buffer is None
+    assert dialog_model.url_buffer is None
