@@ -2,7 +2,7 @@ import enable_pymca_import  # noqa: F401
 
 import logging
 from contextlib import nullcontext as does_not_raise
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 from unittest.mock import Mock, patch
 
 import pytest
@@ -137,7 +137,7 @@ def test_on_connect_exception(caplog: pytest.LogCaptureFixture):
         ("Not a URL", pytest.raises(ValueError)),
     )
 )
-def test_syntax_validator(url, expected_context):
+def test_syntax_validator(url: str, expected_context):
     """Validate the syntax of the URL."""
     with expected_context:
         validate_url_syntax(url)
@@ -156,8 +156,37 @@ def test_syntax_validator(url, expected_context):
         ("http://tiled.example.com", pytest.raises(ValueError), ("https",)),
     )
 )
-def test_scheme_validator(url, expected_context, valid_schemes):
+def test_scheme_validator(url: str, expected_context, valid_schemes: Sequence[str]):
     """Validate the scheme of the URL against valid_schemes."""
     kwargs = {"valid_schemes": valid_schemes} if valid_schemes else {}
     with expected_context:
         validate_url_scheme(url, **kwargs)
+
+
+@pytest.mark.parametrize(
+    "url, expected_url",
+    (
+        # Valid URL scheme
+        ("https://tiled.example.com", "https://tiled.example.com"),
+        # Invalid URL
+        ("after", "before"),
+    )
+)
+def test_validation_on_url_editing_finished(
+    url: str,
+    expected_url: str,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Event handler replaces the existing url if validator succeeds."""
+    caplog.set_level(logging.INFO)
+    validators = {"url": [validate_url_scheme]}
+    model = TiledCatalogSelector(url="before", validators=validators)
+    model._url_buffer = url
+
+    model.on_url_editing_finished()
+    assert model.url == expected_url
+
+    if model.url == "before":
+        # URL was not updated because its scheme was not valid
+        assert " is not a valid URL." in caplog.text
+        assert "URL must include a scheme." in caplog.text

@@ -43,6 +43,8 @@ class TiledCatalogSelector(object):
         self.url = url
         self.client = client
         self.validators = defaultdict(list)
+        if validators:
+            self.validators.update(validators)
 
         self.signals = self.Signals(parent)
         self.client_connected = self.signals.client_connected
@@ -67,7 +69,8 @@ class TiledCatalogSelector(object):
             for validate in self.validators["url"]:
                 validate(self._url_buffer)
         except ValueError as exception:
-            _logger.info(exception.msg)
+            _logger.info(str(exception))
+            # TODO: Should we re-raise the exception or emit a signal to inform the viewer?
             return
         
         if getattr(self, "_url_buffer", None) is not None:
@@ -82,7 +85,7 @@ class TiledCatalogSelector(object):
             new_client = self.client_from_url(self.url)
         except Exception as exception:
             _logger.info(str(exception))
-            # TODO: SHould we re-raise the exception or emit a signal to inform the viewer?
+            # TODO: Should we re-raise the exception or emit a signal to inform the viewer?
             return
 
         if self.client:
