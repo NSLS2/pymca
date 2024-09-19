@@ -84,4 +84,4 @@ def test_url_edit_focus(
 
     dialog_model.url_buffer = "Some text"
     qapp.sendEvent(dialog.url_entry, QEvent(QEvent.Type.FocusIn))
-    assert dialog_model.url_buffer is None
+    assert dialog_model.url_buffer == ""

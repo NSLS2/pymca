@@ -36,41 +36,39 @@ def test_on_url_focus_in_event():
     model.url_buffer = "Pre-existing content"
     model.on_url_focus_in_event(event)
 
-    assert model.url_buffer is None
+    assert model.url_buffer == ""
     assert model.url == expected_url
 
 
 def test_clearurl_buffer():
     """FocusIn event clears the string buffer for a new url."""
-    buffer_name = "url_buffer"
     model = TiledCatalogSelector()
     event = Mock()
-    setattr(model, buffer_name, "Previously edited URL")
+    model.url_buffer = "Previously edited URL"
 
-    buffer_text = getattr(model, buffer_name)
+    buffer_text = model.url_buffer
     assert len(buffer_text) > 0
 
     model.on_url_focus_in_event(event)
-    assert getattr(model, buffer_name) is None
+    assert model.url_buffer == ""
 
 
 def test_on_url_text_edited():
     """Event handler replaces the url buffer without changing the existing url."""
     expected_url = "before"
-    buffer_name = "url_buffer"
     model = TiledCatalogSelector(url=expected_url)
-    setattr(model, buffer_name, "")
+    model.url_buffer = ""
 
     assert model.url == expected_url
-    assert getattr(model, buffer_name) == ""
+    assert model.url_buffer == ""
 
     expected_text = "Update #1"
     model.on_url_text_edited(expected_text)
-    assert getattr(model, buffer_name) == expected_text
+    assert model.url_buffer == expected_text
 
     expected_text = "Update #2"
     model.on_url_text_edited(expected_text)
-    assert getattr(model, buffer_name) == expected_text
+    assert model.url_buffer == expected_text
 
     assert model.url == expected_url
 
@@ -78,13 +76,12 @@ def test_on_url_text_edited():
 def test_on_url_editing_finished():
     """Event handler replaces the existing url with the contents of the buffer."""
     expected_url = "after"
-    buffer_name = "url_buffer"
     model = TiledCatalogSelector(url="before")
-    setattr(model, buffer_name, expected_url)
+    model.url_buffer = expected_url
 
     model.on_url_editing_finished()
     assert model.url == expected_url
-    assert getattr(model, buffer_name) is None
+    assert model.url_buffer == ""
 
 
 def test_on_connect_clicked():

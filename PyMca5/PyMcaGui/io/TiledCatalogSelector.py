@@ -39,7 +39,7 @@ class TiledCatalogSelector(object):
     def __init__(
         self,
         /,
-        url: str = None,
+        url: str = "",
         client: BaseClient = None,
         validators: Mapping[str, List[Callable]] = None,
         parent: Optional[QObject] = None,
@@ -60,7 +60,7 @@ class TiledCatalogSelector(object):
         self.url_validation_error = self.signals.url_validation_error
 
         # A buffer to receive updates while the URL is being edited
-        self.url_buffer = None
+        self.url_buffer = ""
 
     def on_url_focus_in_event(self, event: QEvent):
         """Handle the event when the URL widget gains focus."""
@@ -69,7 +69,7 @@ class TiledCatalogSelector(object):
         # TODO: Check whether this causes issues under the condition when
         #       the connection button is clicked before the user
         #       interacts with the URL text editor.
-        self.url_buffer = None
+        self.url_buffer = ""
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
@@ -93,7 +93,7 @@ class TiledCatalogSelector(object):
             return
         
         self.url = new_url
-        self.url_buffer = None
+        self.url_buffer = ""
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
