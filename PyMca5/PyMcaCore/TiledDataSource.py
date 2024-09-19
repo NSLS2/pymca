@@ -17,6 +17,9 @@ class TiledDataSource(object):
         data.info = {
             # For now, only allow one-dimensional data arrays
             "selectiontype": "1D",
+            # ScanWindow expects to modify this copy of "selection"
+            # TODO: It might be cleaner to leave this key undefined
+            #       and instead let ScanWindow create + modify what it needs
             "selection": copy.deepcopy(selection),
             "LabelNames": labels,
         }
