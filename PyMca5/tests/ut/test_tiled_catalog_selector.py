@@ -79,9 +79,14 @@ def test_on_url_editing_finished():
     model = TiledCatalogSelector(url="before")
     model.url_buffer = expected_url
 
-    model.on_url_editing_finished()
+    with patch.object(model, "url_changed") as mock_signal:
+        mock_signal.emit = Mock()
+        model.on_url_editing_finished()
+
     assert model.url == expected_url
     assert model.url_buffer == ""
+
+    mock_signal.emit.assert_called_once_with()
 
 
 def test_on_connect_clicked():

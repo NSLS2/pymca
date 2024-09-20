@@ -23,6 +23,9 @@ class TiledCatalogSelectorSignals(QObject):
         str, # Error message
         name="TiledCatalogSelector.client_connection_error",
     )
+    url_changed = pyqtSignal(
+        name="TiledCatalogSelector.url_changed",
+    )
     url_validation_error = pyqtSignal(
         str, # Error message
         name="TiledCatalogSelector.url_validation_error",
@@ -57,6 +60,7 @@ class TiledCatalogSelector(object):
         self.signals = self.Signals(parent)
         self.client_connected = self.signals.client_connected
         self.client_connection_error = self.signals.client_connection_error
+        self.url_changed = self.signals.url_changed
         self.url_validation_error = self.signals.url_validation_error
 
         # A buffer to receive updates while the URL is being edited
@@ -94,6 +98,7 @@ class TiledCatalogSelector(object):
         
         self.url = new_url
         self.url_buffer = ""
+        self.url_changed.emit()
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""

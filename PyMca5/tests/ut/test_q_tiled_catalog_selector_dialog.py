@@ -63,7 +63,7 @@ def test_url_editing(qtbot: QtBot, dialog_model: TiledCatalogSelector):
 
     # Disply the URL when it is initialized in the model
     dialog_model.url = "Initial url"
-    dialog.reset_url_entry()
+    dialog_model.url_changed.emit()
     assert dialog.url_entry.displayText() == "Initial url"
 
     # Simulate editing the url_entry text

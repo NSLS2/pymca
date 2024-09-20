@@ -60,6 +60,8 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.create_layout()
         self.connect_model_signals()
         self.connect_model_slots()
+        self.initialize_values()
+        self.reset_url_entry()
 
     def create_layout(self) -> None:
         """Create the visual layout of widgets for the dialog."""
@@ -67,7 +69,6 @@ class QTiledCatalogSelectorDialog(QDialog):
 
         # Connection elements
         self.url_entry = QLineEdit()
-        self.reset_url_entry()
         self.connect_button = QPushButton("Connect")
         self.connection_label = QLabel("No url connected")
 
@@ -88,7 +89,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         else:
             self.url_entry.setText(self.model.url)
 
-    def connect_model_signals(self):
+    def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
 
@@ -108,7 +109,9 @@ class QTiledCatalogSelectorDialog(QDialog):
             # TODO: Display the error message; visual emphasis of url_entry
             ...
 
-    def connect_model_slots(self):
+        self.model.url_changed.connect(self.reset_url_entry)
+
+    def connect_model_slots(self) -> None:
         """Connect model slots to dialog signals."""
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_slots()...")
 
@@ -121,3 +124,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
+
+    def initialize_values(self) -> None:
+        """Initialize widget values."""
+        self.reset_url_entry()
