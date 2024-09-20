@@ -33,6 +33,7 @@ import os
 import sys
 
 from PyMca5.PyMcaDataDir import PYMCA_DATA_DIR
+from PyMca5.bool_utils import returns_bool
 try:
     from fisx.DataDir import FISX_DATA_DIR
 except ImportError:
@@ -47,8 +48,19 @@ if sys.platform.startswith("win"):
     import ctypes
     from ctypes.wintypes import MAX_PATH
 
-if os.path.exists(os.path.join(\
-    os.path.dirname(os.path.dirname(__file__)), 'bootstrap.py')):
+@returns_bool
+def _get_bool_env_var(name: str, value: bool):
+    """Get the named boolean environment variable; else return 'value'."""
+    return os.environ.get(name, value)
+
+_IMPORTING_FROM_SOURCE_REPO = os.path.exists(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), 'bootstrap.py')
+)
+_ALLOW_PYMCA_IMPORT = _get_bool_env_var(
+    "ALLOW_PYMCA_IMPORT",
+    not _IMPORTING_FROM_SOURCE_REPO
+)
+if not _ALLOW_PYMCA_IMPORT:
     raise ImportError('PyMca cannot be imported from source directory')
 
 def version():
