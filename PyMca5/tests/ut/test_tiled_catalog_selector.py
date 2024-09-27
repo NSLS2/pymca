@@ -67,7 +67,7 @@ def test_on_url_editing_finished():
         model.on_url_editing_finished()
 
     assert model.url == expected_url
-    assert model._url_buffer == ""
+    assert model._url_buffer == expected_url
 
     mock_signal.emit.assert_called_once_with()
 

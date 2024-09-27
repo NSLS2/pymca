@@ -97,7 +97,6 @@ class TiledCatalogSelector(object):
             return
         
         self.url = new_url
-        self._url_buffer = ""
         self.url_changed.emit()
 
     def on_connect_clicked(self, checked: bool = False):
