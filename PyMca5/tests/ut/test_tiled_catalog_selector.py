@@ -25,6 +25,17 @@ def test_init(optional_args: Mapping[str, Any]):
     TiledCatalogSelector()
 
 
+def test_url_property():
+    """Model URL properly returned and set"""
+    expected_url = "before"
+    model = TiledCatalogSelector(url=expected_url)
+    assert model.url == expected_url
+
+    expected_url = "after"
+    model.url = expected_url
+    assert model.url == expected_url
+
+
 def test_on_url_text_edited():
     """Event handler replaces the url buffer without changing the existing url."""
     expected_url = "before"

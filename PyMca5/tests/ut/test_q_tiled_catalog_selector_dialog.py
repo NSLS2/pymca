@@ -70,3 +70,24 @@ def test_url_editing(qtbot: QtBot, dialog_model: TiledCatalogSelector):
     dialog.url_entry.textEdited.emit("New url")
     dialog.url_entry.editingFinished.emit()
     assert dialog.model.url == "New url"
+
+def test_url_set_through_model(qtbot: QtBot, dialog_model: TiledCatalogSelector):
+    """Verify setting the model url connects properly."""
+    dialog = QTiledCatalogSelectorDialog(model=dialog_model)
+    dialog.show()
+    qtbot.addWidget(dialog)
+
+    expected_url = "New URL"
+    dialog.model.url = expected_url
+
+    with patch.object(dialog_model, "client_from_url") as mock_client_constructor:
+        client = Mock()
+        client.uri = dialog_model.url
+        client.context.api_uri = ""
+        mock_client_constructor.return_value = client
+
+        dialog.connect_button.click()
+
+    assert expected_url in dialog.connection_label.text()
+
+    assert expected_url in dialog.connection_label.text()

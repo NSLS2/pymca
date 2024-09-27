@@ -74,7 +74,6 @@ class TiledCatalogSelector(object):
     def url(self, value: str):
         self._url = value
         self._url_buffer = value
-        self.url_changed.emit()
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
@@ -99,8 +98,7 @@ class TiledCatalogSelector(object):
         
         self.url = new_url
         self._url_buffer = ""
-        # No need to emit here; emitting when url changed
-        # self.url_changed.emit()
+        self.url_changed.emit()
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
