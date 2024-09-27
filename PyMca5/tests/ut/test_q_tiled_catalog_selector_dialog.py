@@ -70,18 +70,3 @@ def test_url_editing(qtbot: QtBot, dialog_model: TiledCatalogSelector):
     dialog.url_entry.textEdited.emit("New url")
     dialog.url_entry.editingFinished.emit()
     assert dialog.model.url == "New url"
-
-
-def test_url_edit_focus(
-    qapp: QApplication,
-    qtbot: QtBot,
-    dialog_model: TiledCatalogSelector,
-):
-    """Verify custom event filtering for url_entry widget."""
-    dialog = QTiledCatalogSelectorDialog(model=dialog_model)
-    dialog.show()
-    qtbot.addWidget(dialog)
-
-    dialog_model.url_buffer = "Some text"
-    qapp.sendEvent(dialog.url_entry, QEvent(QEvent.Type.FocusIn))
-    assert dialog_model.url_buffer == ""

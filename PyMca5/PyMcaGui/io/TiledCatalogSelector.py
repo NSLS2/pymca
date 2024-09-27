@@ -51,7 +51,7 @@ class TiledCatalogSelector(object):
     ):
         _logger.debug("TiledCatalogSelector.__init__()...")
 
-        self.url = url
+        self._url = url
         self.client = client
         self.validators = defaultdict(list)
         if validators:
@@ -64,28 +64,29 @@ class TiledCatalogSelector(object):
         self.url_validation_error = self.signals.url_validation_error
 
         # A buffer to receive updates while the URL is being edited
-        self.url_buffer = ""
+        self._url_buffer = self.url
 
-    def on_url_focus_in_event(self, event: QEvent):
-        """Handle the event when the URL widget gains focus."""
-        _logger.debug("TiledCatalogSelector.on_url_focus_in_event()...")
-
-        # TODO: Check whether this causes issues under the condition when
-        #       the connection button is clicked before the user
-        #       interacts with the URL text editor.
-        self.url_buffer = ""
+    @property
+    def url(self):
+        return self._url
+    
+    @url.setter
+    def url(self, value: str):
+        self._url = value
+        self._url_buffer = value
+        self.url_changed.emit()
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
         _logger.debug("TiledCatalogSelector.on_url_text_edited()...")
 
-        self.url_buffer = new_text
+        self._url_buffer = new_text
 
     def on_url_editing_finished(self):
         """Handle a notification that URL editing is complete."""
         _logger.debug("TiledCatalogSelector.on_url_editing_finished()...")
 
-        new_url = str.strip(self.url_buffer or "")
+        new_url = str.strip(self._url_buffer or "")
 
         try:
             for validate in self.validators["url"]:
@@ -97,8 +98,9 @@ class TiledCatalogSelector(object):
             return
         
         self.url = new_url
-        self.url_buffer = ""
-        self.url_changed.emit()
+        self._url_buffer = ""
+        # No need to emit here; emitting when url changed
+        # self.url_changed.emit()
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
@@ -117,7 +119,7 @@ class TiledCatalogSelector(object):
             ...
 
         self.client = new_client
-        self.client_connected.emit(self.client.uri, self.client.context.api_uri)
+        self.client_connected.emit(self.client.uri, str(self.client.context.api_uri))
 
     @staticmethod
     def client_from_url(url: str):

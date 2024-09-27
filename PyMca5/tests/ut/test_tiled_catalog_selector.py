@@ -25,50 +25,22 @@ def test_init(optional_args: Mapping[str, Any]):
     TiledCatalogSelector()
 
 
-def test_on_url_focus_in_event():
-    """Event handler creates a string buffer for a new url without changing the existing url."""
-    expected_url = "before"
-    model = TiledCatalogSelector(url=expected_url)
-    event = Mock()
-
-    assert model.url == expected_url
-
-    model.url_buffer = "Pre-existing content"
-    model.on_url_focus_in_event(event)
-
-    assert model.url_buffer == ""
-    assert model.url == expected_url
-
-
-def test_clearurl_buffer():
-    """FocusIn event clears the string buffer for a new url."""
-    model = TiledCatalogSelector()
-    event = Mock()
-    model.url_buffer = "Previously edited URL"
-
-    buffer_text = model.url_buffer
-    assert len(buffer_text) > 0
-
-    model.on_url_focus_in_event(event)
-    assert model.url_buffer == ""
-
-
 def test_on_url_text_edited():
     """Event handler replaces the url buffer without changing the existing url."""
     expected_url = "before"
     model = TiledCatalogSelector(url=expected_url)
-    model.url_buffer = ""
+    model._url_buffer = ""
 
     assert model.url == expected_url
-    assert model.url_buffer == ""
+    assert model._url_buffer == ""
 
     expected_text = "Update #1"
     model.on_url_text_edited(expected_text)
-    assert model.url_buffer == expected_text
+    assert model._url_buffer == expected_text
 
     expected_text = "Update #2"
     model.on_url_text_edited(expected_text)
-    assert model.url_buffer == expected_text
+    assert model._url_buffer == expected_text
 
     assert model.url == expected_url
 
@@ -77,14 +49,14 @@ def test_on_url_editing_finished():
     """Event handler replaces the existing url with the contents of the buffer."""
     expected_url = "after"
     model = TiledCatalogSelector(url="before")
-    model.url_buffer = expected_url
+    model._url_buffer = expected_url
 
     with patch.object(model, "url_changed") as mock_signal:
         mock_signal.emit = Mock()
         model.on_url_editing_finished()
 
     assert model.url == expected_url
-    assert model.url_buffer == ""
+    assert model._url_buffer == ""
 
     mock_signal.emit.assert_called_once_with()
 
@@ -192,7 +164,7 @@ def test_validation_on_url_editing_finished(
     caplog.set_level(logging.INFO)
     validators = {"url": [validate_url_scheme]}
     model = TiledCatalogSelector(url="before", validators=validators)
-    model.url_buffer = url
+    model._url_buffer = url
 
     with patch.object(model, "url_validation_error") as mock_signal:
         mock_signal.emit = Mock()

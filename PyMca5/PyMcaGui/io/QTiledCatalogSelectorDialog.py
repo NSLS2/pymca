@@ -5,6 +5,7 @@ from typing import Callable, Mapping, Optional
 from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget,
+    QApplication, QMainWindow,
 )
 
 from .TiledCatalogSelector import TiledCatalogSelector
@@ -116,11 +117,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_slots()...")
 
         model = self.model
-        urlFocusInFilter = PassThroughEventFilter(
-            handlers={QEvent.Type.FocusIn: model.on_url_focus_in_event},
-            parent=self,
-        )
-        self.url_entry.installEventFilter(urlFocusInFilter)
+
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
@@ -128,3 +125,16 @@ class QTiledCatalogSelectorDialog(QDialog):
     def initialize_values(self) -> None:
         """Initialize widget values."""
         self.reset_url_entry()
+
+if __name__ == '__main__':
+    from sys import argv
+    app = QApplication(argv)
+    window = QMainWindow()
+    model = TiledCatalogSelector(parent=app)
+    # model.url = "https://tiled-demo.blueskyproject.io/api"
+    dialog = QTiledCatalogSelectorDialog(model=model)
+
+    window.show()
+    window.setCentralWidget(dialog)
+    # breakpoint()
+    exit(app.exec_())
