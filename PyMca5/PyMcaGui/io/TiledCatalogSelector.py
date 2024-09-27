@@ -1,5 +1,6 @@
 import logging
-from collections import defaultdict
+from collections import abc, defaultdict
+import functools
 from typing import Callable, List, Mapping, Optional, Sequence
 from urllib.parse import ParseResult, urlparse as _urlparse
 
@@ -7,9 +8,18 @@ from PyQt5.QtCore import QEvent, QObject, pyqtSignal
 
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
+from tiled.structures.core import StructureFamily
 
 
 _logger = logging.getLogger(__name__)
+
+
+
+class DummyClient:
+    "Placeholder for a structure family we cannot (yet) handle"
+
+    def __init__(self, *args, item, **kwargs):
+        self.item = item
 
 
 class TiledCatalogSelectorSignals(QObject):
@@ -22,6 +32,10 @@ class TiledCatalogSelectorSignals(QObject):
     client_connection_error = pyqtSignal(
         str, # Error message
         name="TiledCatalogSelector.client_connection_error",
+    )
+    table_changed = pyqtSignal(
+        object, # New node path parts, tuple of strings
+        name="TiledCatalogSelector.table_changed",
     )
     url_changed = pyqtSignal(
         name="TiledCatalogSelector.url_changed",
@@ -62,6 +76,7 @@ class TiledCatalogSelector(object):
         self.client_connection_error = self.signals.client_connection_error
         self.url_changed = self.signals.url_changed
         self.url_validation_error = self.signals.url_validation_error
+        self.table_changed = self.signals.table_changed
 
         # A buffer to receive updates while the URL is being edited
         self._url_buffer = self.url
@@ -117,6 +132,49 @@ class TiledCatalogSelector(object):
 
         self.client = new_client
         self.client_connected.emit(self.client.uri, str(self.client.context.api_uri))
+        self.set_root(self.client)
+
+    def set_root(self, root):
+        self.root = root
+        self.node_path_parts = ()
+        self._current_page = 0
+        if root is not None:
+            self.table_changed.emit(self.node_path_parts)
+
+    def get_current_node(self):
+        return self.get_node(self.node_path_parts)
+
+    @functools.lru_cache(maxsize=1)
+    def get_node(self, node_path):
+        if node_path:
+            return self.root[node_path]
+        return self.root
+
+    def enter_node(self, node_id):
+        self.node_path_parts += (node_id,)
+        self._current_page = 0
+        self.table_changed.emit(self.node_path_parts)
+
+    def exit_node(self):
+        self.node_path_parts = self.node_path_parts[:-1]
+        self._current_page = 0
+        self.table_changed.emit(self.node_path_parts)
+
+    def open_node(self, node_id):
+        node = self.get_current_node()[node_id]
+        family = node.item["attributes"]["structure_family"]
+        if isinstance(node, DummyClient):
+            _logger.info(f"Cannot open type: '{family}'")
+            return
+        if family == StructureFamily.array:
+            _logger.info("Found array, plotting TODO")
+            ...
+            # layer = self.viewer.add_image(node, name=node_id)
+            # layer.reset_contrast_limits()
+        elif family == StructureFamily.container:
+            self.enter_node(node_id)
+        else:
+            _logger.info(f"Type not supported:'{family}")
 
     @staticmethod
     def client_from_url(url: str):
