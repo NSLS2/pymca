@@ -44,7 +44,7 @@ def test_on_url_text_edited():
 
     assert model.url == expected_url
     # Buffer is pre-populated for the case when no user editing events have been received.
-    assert model._url_buffer == ""
+    assert model._url_buffer == expected_url
 
     expected_text = "Update #1"
     model.on_url_text_edited(expected_text)
