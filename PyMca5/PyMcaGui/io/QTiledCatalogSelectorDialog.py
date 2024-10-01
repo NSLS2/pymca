@@ -5,7 +5,7 @@ from typing import Callable, Mapping, Optional, Tuple
 from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtWidgets import (
     QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget,
-    QApplication, QMainWindow, QComboBox, QHBoxLayout, QTableWidget,
+    QComboBox, QHBoxLayout, QTableWidget,
     QAbstractItemView, QTextEdit, QSplitter, QTableWidgetItem,
     QStyle,
 )
@@ -297,6 +297,8 @@ class ClickableQLabel(QLabel):
 
 if __name__ == '__main__':
     from sys import argv
+    from PyQt5.QtWidgets import QApplication, QMainWindow
+
     app = QApplication(argv)
     window = QMainWindow()
     model = TiledCatalogSelector(parent=app)

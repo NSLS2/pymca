@@ -26,11 +26,12 @@ def test_init(optional_args: Mapping[str, Any]):
 
 
 def test_url_property():
-    """Model URL properly returned and set"""
+    """Model URL is properly returned and set."""
     expected_url = "before"
     model = TiledCatalogSelector(url=expected_url)
     assert model.url == expected_url
 
+    # This is a non-trivial assertion when property getter/setter is used
     expected_url = "after"
     model.url = expected_url
     assert model.url == expected_url
@@ -40,9 +41,9 @@ def test_on_url_text_edited():
     """Event handler replaces the url buffer without changing the existing url."""
     expected_url = "before"
     model = TiledCatalogSelector(url=expected_url)
-    model._url_buffer = ""
 
     assert model.url == expected_url
+    # Buffer is pre-populated for the case when no user editing events have been received.
     assert model._url_buffer == ""
 
     expected_text = "Update #1"
@@ -60,6 +61,7 @@ def test_on_url_editing_finished():
     """Event handler replaces the existing url with the contents of the buffer."""
     expected_url = "after"
     model = TiledCatalogSelector(url="before")
+    # Behave as if the user had edited the url in the dialog widget
     model._url_buffer = expected_url
 
     with patch.object(model, "url_changed") as mock_signal:
@@ -175,6 +177,7 @@ def test_validation_on_url_editing_finished(
     caplog.set_level(logging.INFO)
     validators = {"url": [validate_url_scheme]}
     model = TiledCatalogSelector(url="before", validators=validators)
+    # Behave as if the user had edited the url in the dialog widget
     model._url_buffer = url
 
     with patch.object(model, "url_validation_error") as mock_signal:

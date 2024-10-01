@@ -89,6 +89,7 @@ class TiledCatalogSelector(object):
     def url(self, value: str):
         self._url = value
         self._url_buffer = value
+        self.url_changed.emit()
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
@@ -100,7 +101,7 @@ class TiledCatalogSelector(object):
         """Handle a notification that URL editing is complete."""
         _logger.debug("TiledCatalogSelector.on_url_editing_finished()...")
 
-        new_url = str.strip(self._url_buffer or "")
+        new_url = self._url_buffer.strip()
 
         try:
             for validate in self.validators["url"]:
@@ -112,7 +113,6 @@ class TiledCatalogSelector(object):
             return
         
         self.url = new_url
-        self.url_changed.emit()
 
     def on_connect_clicked(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
