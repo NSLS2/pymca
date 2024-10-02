@@ -1,7 +1,7 @@
 import functools
 import logging
 from collections import defaultdict
-from typing import Callable, List, Mapping, Optional, Sequence
+from typing import Callable, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import ParseResult, urlparse as _urlparse
 
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -12,14 +12,6 @@ from tiled.structures.core import StructureFamily
 
 
 _logger = logging.getLogger(__name__)
-
-
-
-class DummyClient:
-    "Placeholder for a structure family we cannot (yet) handle"
-
-    def __init__(self, *args, item, **kwargs):
-        self.item = item
 
 
 class TiledCatalogSelectorSignals(QObject):
@@ -136,51 +128,64 @@ class TiledCatalogSelector(object):
             # TODO: Clean-up previously connected client?
             ...
 
+        # TODO: These steps might move to a property: @client.setter
         self.client = new_client
         self.client_connected.emit(self.client.uri, str(self.client.context.api_uri))
         self.set_root(self.client)
 
-    def set_root(self, root):
-        self.root = root
+    def set_root_client(self, client: BaseClient) -> None:
+        """Update the model with content from the new root client.
+        
+            Emits the 'table_changed' signal when a client is defined."""
+        # TODO: Should probably use self.client rather than a func parameter
+        self.client = client
         self.node_path_parts = ()
         self._current_page = 0
-        if root is not None:
+        if client is not None:
             self.table_changed.emit(self.node_path_parts)
 
-    def get_current_node(self):
+    def get_current_node(self) -> BaseClient:
+        """Fetch a Tiled client corresponding to the current node path."""
         return self.get_node(self.node_path_parts)
 
     @functools.lru_cache(maxsize=1)
-    def get_node(self, node_path):
-        if node_path:
-            return self.root[node_path]
+    def get_node(self, node_path_parts: Tuple[str]) -> BaseClient:
+        """Fetch a Tiled client corresponding to the node path."""
+        if node_path_parts:
+            return self.root[node_path_parts]
+        
+        # An empty tuple indicates the root node
         return self.root
 
-    def enter_node(self, node_id):
-        self.node_path_parts += (node_id,)
+    def enter_node(self, child_node_path: str) -> None:
+        """Select a child node within the current Tiled node.
+        
+            Emits the 'table_changed' signal."""
+        self.node_path_parts += (child_node_path,)
         self._current_page = 0
         self.table_changed.emit(self.node_path_parts)
 
-    def exit_node(self):
+    def exit_node(self) -> None:
+        """Select parent Tiled node.
+        
+            Emits the 'table_changed' signal."""
         self.node_path_parts = self.node_path_parts[:-1]
         self._current_page = 0
         self.table_changed.emit(self.node_path_parts)
 
-    def open_node(self, node_id):
-        node = self.get_current_node()[node_id]
+    def open_node(self, child_node_path: str) -> None:
+        """Select a child node if its Tiled structure_family is supported."""
+        node = self.get_current_node()[child_node_path]
         family = node.item["attributes"]["structure_family"]
-        if isinstance(node, DummyClient):
-            _logger.info(f"Cannot open type: '{family}'")
-            return
+
         if family == StructureFamily.array:
             _logger.info("Found array, plotting TODO")
             ...
-            # layer = self.viewer.add_image(node, name=node_id)
-            # layer.reset_contrast_limits()
         elif family == StructureFamily.container:
-            self.enter_node(node_id)
+            self.enter_node(child_node_path)
         else:
-            _logger.info(f"Type not supported:'{family}")
+            _logger.error(f"StructureFamily not supported:'{family}")
+            # TODO: Emit an error signal for dialog widget to respond to
 
     @staticmethod
     def client_from_url(url: str):
