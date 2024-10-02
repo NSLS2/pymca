@@ -74,21 +74,27 @@ class TiledCatalogSelector(object):
         self.signals = self.Signals(parent)
         self.client_connected = self.signals.client_connected
         self.client_connection_error = self.signals.client_connection_error
+        self.table_changed = self.signals.table_changed
         self.url_changed = self.signals.url_changed
         self.url_validation_error = self.signals.url_validation_error
-        self.table_changed = self.signals.table_changed
 
         # A buffer to receive updates while the URL is being edited
         self._url_buffer = self.url
 
     @property
-    def url(self):
+    def url(self) -> str:
+        """URL for accessing tiled server data."""
         return self._url
     
     @url.setter
     def url(self, value: str):
+        """Updates the URL (and buffer) for accessing tiled server data.
+        
+            Emits the 'url_changed' signal.
+        """
         self._url = value
         self._url_buffer = value
+        # TODO: Perhaps this should only emit if the value is changed?
         self.url_changed.emit()
 
     def on_url_text_edited(self, new_text: str):
