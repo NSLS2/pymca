@@ -1,9 +1,9 @@
 import enable_pymca_import  # noqa: F401
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-import pytest
 from pytestqt.qtbot import QtBot
+from tiled.client.base import BaseClient
 
 
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
@@ -23,7 +23,11 @@ def test_render(qtbot: QtBot, dialog_model: TiledCatalogSelector):
 
 # Functional tests...
 
-def test_connection(qtbot: QtBot, dialog_model: TiledCatalogSelector, client):
+def test_connection(
+    qtbot: QtBot,
+    dialog_model: TiledCatalogSelector,
+    tiled_client: BaseClient,
+):
     """Verify changes enacted by initiating a connection."""
     model = dialog_model
     expected_url = "http://local-tiled-app/api/v1/metadata/"
@@ -34,11 +38,7 @@ def test_connection(qtbot: QtBot, dialog_model: TiledCatalogSelector, client):
     qtbot.addWidget(dialog)
 
     with patch.object(model, "client_from_url") as mock_client_constructor:
-        # client = Mock()
-        # client.uri = model.url
-        # client.context.api_uri = ""
-        mock_client_constructor.return_value = client
-
+        mock_client_constructor.return_value = tiled_client
         dialog.connect_button.click()
     
     assert expected_url in dialog.connection_label.text()
@@ -63,7 +63,11 @@ def test_url_editing(qtbot: QtBot, dialog_model: TiledCatalogSelector):
     dialog.url_entry.editingFinished.emit()
     assert dialog.model.url == "New url"
 
-def test_url_set_through_model(qtbot: QtBot, dialog_model: TiledCatalogSelector, client):
+def test_url_set_through_model(
+    qtbot: QtBot,
+    dialog_model: TiledCatalogSelector,
+    tiled_client: BaseClient,
+):
     """Connects to a url that is set on the model after dialog creation."""
     dialog = QTiledCatalogSelectorDialog(model=dialog_model)
     dialog.show()
@@ -73,11 +77,7 @@ def test_url_set_through_model(qtbot: QtBot, dialog_model: TiledCatalogSelector,
     dialog.model.url = expected_url
 
     with patch.object(dialog_model, "client_from_url") as mock_client_constructor:
-        # client = Mock()
-        # client.uri = dialog_model.url
-        # client.context.api_uri = ""
-        mock_client_constructor.return_value = client
-
+        mock_client_constructor.return_value = tiled_client
         dialog.connect_button.click()
 
     assert expected_url in dialog.connection_label.text()
