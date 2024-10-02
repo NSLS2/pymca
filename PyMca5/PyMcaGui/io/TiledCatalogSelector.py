@@ -131,7 +131,7 @@ class TiledCatalogSelector(object):
         # TODO: These steps might move to a property: @client.setter
         self.client = new_client
         self.client_connected.emit(self.client.uri, str(self.client.context.api_uri))
-        self.set_root(self.client)
+        self.set_root_client(self.client)
 
     def set_root_client(self, client: BaseClient) -> None:
         """Update the model with content from the new root client.
@@ -152,10 +152,10 @@ class TiledCatalogSelector(object):
     def get_node(self, node_path_parts: Tuple[str]) -> BaseClient:
         """Fetch a Tiled client corresponding to the node path."""
         if node_path_parts:
-            return self.root[node_path_parts]
+            return self.client[node_path_parts]
         
         # An empty tuple indicates the root node
-        return self.root
+        return self.client
 
     def enter_node(self, child_node_path: str) -> None:
         """Select a child node within the current Tiled node.
