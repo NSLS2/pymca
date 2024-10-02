@@ -34,7 +34,7 @@ class TiledCatalogSelectorSignals(QObject):
         name="TiledCatalogSelector.client_connection_error",
     )
     table_changed = pyqtSignal(
-        object, # New node path parts, tuple of strings
+        tuple, # New node path parts, tuple of strings
         name="TiledCatalogSelector.table_changed",
     )
     url_changed = pyqtSignal(
