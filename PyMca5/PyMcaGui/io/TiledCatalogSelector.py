@@ -1,10 +1,10 @@
-import logging
-from collections import abc, defaultdict
 import functools
+import logging
+from collections import defaultdict
 from typing import Callable, List, Mapping, Optional, Sequence
 from urllib.parse import ParseResult, urlparse as _urlparse
 
-from PyQt5.QtCore import QEvent, QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal
 
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
