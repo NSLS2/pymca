@@ -4,20 +4,15 @@ from typing import Callable, Mapping, Optional, Tuple
 
 from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtWidgets import (
-    QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget,
-    QComboBox, QHBoxLayout, QTableWidget,
-    QAbstractItemView, QTextEdit, QSplitter, QTableWidgetItem,
-    QStyle,
+    QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem, QTextEdit,
+    QVBoxLayout, QWidget,
 )
-
 # TODO: test pyqtSignal vs Signal
 from qtpy.QtCore import Qt, Signal
+from tiled.structures.core import StructureFamily
 
 from .TiledCatalogSelector import TiledCatalogSelector
-
-# from tiled.client.array import DaskArrayClient
-# from tiled.client.container import Container
-from tiled.structures.core import StructureFamily
 
 
 _logger = logging.getLogger(__name__)

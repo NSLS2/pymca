@@ -6,13 +6,12 @@ import pytest
 
 from PyQt5.QtWidgets import QApplication
 
-from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
-
-from tiled.catalog import in_memory
 from tiled.server.app import build_app
 from tiled.client import Context, from_context
 from tiled.adapters.array import ArrayAdapter
 from tiled.adapters.mapping import MapAdapter
+
+from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
 
 
 tree = MapAdapter(
