@@ -62,6 +62,7 @@ def test_on_url_editing_finished():
     expected_url = "after"
     model = TiledCatalogSelector(url="before")
     # Behave as if the user had edited the url in the dialog widget
+    # Behave as if the user had edited the url in the dialog widget
     model._url_buffer = expected_url
 
     with patch.object(model, "url_changed") as mock_signal:
@@ -177,6 +178,7 @@ def test_validation_on_url_editing_finished(
     caplog.set_level(logging.INFO)
     validators = {"url": [validate_url_scheme]}
     model = TiledCatalogSelector(url="before", validators=validators)
+    # Behave as if the user had edited the url in the dialog widget
     # Behave as if the user had edited the url in the dialog widget
     model._url_buffer = url
 
