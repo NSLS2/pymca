@@ -57,9 +57,15 @@ def test_on_url_text_edited():
     assert model.url == expected_url
 
 
-def test_on_url_editing_finished():
+@pytest.mark.parametrize(
+    "expected_url, expected_emit",
+    (
+        ("after", "assert_called_once_with"),
+        ("before", "assert_not_called"),
+    )
+)
+def test_on_url_editing_finished(expected_url: str, expected_emit: str):
     """Event handler replaces the existing url with the contents of the buffer."""
-    expected_url = "after"
     model = TiledCatalogSelector(url="before")
     # Behave as if the user had edited the url in the dialog widget
     # Behave as if the user had edited the url in the dialog widget
@@ -72,7 +78,7 @@ def test_on_url_editing_finished():
     assert model.url == expected_url
     assert model._url_buffer == expected_url
 
-    mock_signal.emit.assert_called_once_with()
+    getattr(mock_signal.emit, expected_emit)()
 
 
 def test_on_connect_clicked():
