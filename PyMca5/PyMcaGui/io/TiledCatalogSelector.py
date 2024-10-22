@@ -58,7 +58,7 @@ class TiledCatalogSelector(object):
         _logger.debug("TiledCatalogSelector.__init__()...")
 
         self._url = url
-        self.client = client
+        self._client = client
         self.validators = defaultdict(list)
         if validators:
             self.validators.update(validators)
@@ -90,6 +90,33 @@ class TiledCatalogSelector(object):
         if value != old_value:
             self.url_changed.emit()
 
+    @property
+    def client(self):
+        return self._client
+
+    @client.setter
+    def client(self, _):
+        raise NotImplementedError("Call set_root_client() instead")
+
+    def set_root_client(self) -> None:
+        """Update the model with content from the new root client.
+        
+            Emits the 'table_changed' signal when a client is defined."""
+        try:
+            new_client = self.client_from_url(self.url)
+        except Exception as exception:
+            error_message = str(exception)
+            _logger.error(error_message)
+            self.client_connection_error.emit(error_message)
+            return
+
+        self._client = new_client
+        self.client_connected.emit(self._client.uri, str(self._client.context.api_uri))
+        self.node_path_parts = ()
+        self._current_page = 0
+        if self.client is not None:
+            self.table_changed.emit(self.node_path_parts)
+
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
         _logger.debug("TiledCatalogSelector.on_url_text_edited()...")
@@ -117,33 +144,11 @@ class TiledCatalogSelector(object):
         """Handle a button click to connect to the Tiled client."""
         _logger.debug("TiledCatalogSelector.on_connect_clicked()...")
 
-        try:
-            new_client = self.client_from_url(self.url)
-        except Exception as exception:
-            error_message = str(exception)
-            _logger.error(error_message)
-            self.client_connection_error.emit(error_message)
-            return
-
         if self.client:
             # TODO: Clean-up previously connected client?
             ...
 
-        # TODO: These steps might move to a property: @client.setter
-        self.client = new_client
-        self.client_connected.emit(self.client.uri, str(self.client.context.api_uri))
-        self.set_root_client(self.client)
-
-    def set_root_client(self, client: BaseClient) -> None:
-        """Update the model with content from the new root client.
-        
-            Emits the 'table_changed' signal when a client is defined."""
-        # TODO: Should probably use self.client rather than a func parameter
-        self.client = client
-        self.node_path_parts = ()
-        self._current_page = 0
-        if client is not None:
-            self.table_changed.emit(self.node_path_parts)
+        self.set_root_client()
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""
