@@ -4,20 +4,15 @@ from typing import Callable, Mapping, Optional, Tuple
 
 from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtWidgets import (
-    QDialog, QLabel, QLineEdit, QPushButton, QVBoxLayout, QWidget,
-    QComboBox, QHBoxLayout, QTableWidget,
-    QAbstractItemView, QTextEdit, QSplitter, QTableWidgetItem,
-    QStyle,
+    QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem, QTextEdit,
+    QVBoxLayout, QWidget,
 )
-
 # TODO: test pyqtSignal vs Signal
 from qtpy.QtCore import Qt, Signal
+from tiled.structures.core import StructureFamily
 
 from .TiledCatalogSelector import TiledCatalogSelector
-
-# from tiled.client.array import DaskArrayClient
-# from tiled.client.container import Container
-from tiled.structures.core import StructureFamily
 
 
 _logger = logging.getLogger(__name__)
@@ -71,7 +66,6 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.connect_model_signals()
         self.connect_model_slots()
         self.initialize_values()
-        self.reset_url_entry()
 
     def create_layout(self) -> None:
         """Create the visual layout of widgets for the dialog."""
@@ -94,17 +88,11 @@ class QTiledCatalogSelectorDialog(QDialog):
         # Navigation elements
         self.rows_per_page_label = QLabel("Rows per page: ")
         self.rows_per_page_selector = QComboBox()
-        self.rows_per_page_selector.addItems(["5", "10", "25"])
-        self.rows_per_page_selector.setCurrentIndex(0)
 
         self.current_location_label = QLabel()
         self.previous_page = ClickableQLabel("<")
         self.next_page = ClickableQLabel(">")
         self.navigation_widget = QWidget()
-
-        self._rows_per_page = int(
-            self.rows_per_page_selector.currentText()
-        )
 
         # Navigation layout
         navigation_layout = QHBoxLayout()
@@ -170,8 +158,13 @@ class QTiledCatalogSelectorDialog(QDialog):
         layout.addWidget(self.splitter)
         self.setLayout(layout)
 
+    def initialize_values(self) -> None:
+        """Initialize widget values."""
+        self.reset_url_entry()
+        self.reset_rows_per_page()
+
     def reset_url_entry(self) -> None:
-        """Reset the stated of the url_entry widget."""
+        """Reset the state of the url_entry widget."""
         _logger.debug("QTiledCatalogSelectorDialog.reset_url_entry()...")
 
         if not self.model.url:
@@ -179,11 +172,23 @@ class QTiledCatalogSelectorDialog(QDialog):
         else:
             self.url_entry.setText(self.model.url)
 
+    def reset_rows_per_page(self) -> None:
+        """Reset the state of the rows_per_page_selector widget."""
+        _logger.debug("QTiledCatalogSelectorDialog.reset_rows_per_page()...")
+
+        # TODO: Should probably make these a property (of the model?)
+        self.rows_per_page_selector.addItems(["5", "10", "25"])
+        self.rows_per_page_selector.setCurrentIndex(0)
+        self._rows_per_page = int(
+            self.rows_per_page_selector.currentText()
+        )
+
     def populate_table(self):
+        original_state = {}
         # TODO: may need if condition if we implement a disconnect button
         self.catalog_table_widget.setVisible(True)
 
-        prev_block = self.catalog_table.blockSignals(True)
+        original_state["blockSignals"] = self.catalog_table.blockSignals(True)
         # Remove all rows first
         while self.catalog_table.rowCount() > 0:
             self.catalog_table.removeRow(0)
@@ -240,7 +245,7 @@ class QTiledCatalogSelectorDialog(QDialog):
 
         self.catalog_table.setVerticalHeaderLabels(headers)
         self._clear_metadata()
-        self.catalog_table.blockSignals(prev_block)
+        self.catalog_table.blockSignals(original_state["blockSignals"])
 
     def _clear_metadata(self):
         self.info_box.setText("")
@@ -263,7 +268,7 @@ class QTiledCatalogSelectorDialog(QDialog):
 
         @self.model.table_changed.connect
         def on_table_changed(node_path_parts: Tuple[str]):
-            print(f"{node_path_parts = }")
+            _logger.debug(f"on_table_changed(): {node_path_parts = }")
             self.populate_table()
 
         @self.model.url_validation_error.connect
@@ -282,10 +287,6 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
-
-    def initialize_values(self) -> None:
-        """Initialize widget values."""
-        self.reset_url_entry()
 
 
 class ClickableQLabel(QLabel):
