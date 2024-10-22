@@ -84,10 +84,11 @@ class TiledCatalogSelector(object):
         
             Emits the 'url_changed' signal.
         """
+        old_value = self._url
         self._url = value
         self._url_buffer = value
-        # TODO: Perhaps this should only emit if the value is changed?
-        self.url_changed.emit()
+        if value != old_value:
+            self.url_changed.emit()
 
     def on_url_text_edited(self, new_text: str):
         """Handle a notification that the URL is being edited."""
