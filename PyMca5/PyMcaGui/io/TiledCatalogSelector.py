@@ -99,12 +99,12 @@ class TiledCatalogSelector(object):
     def client(self, _):
         """Do not directly replace the root Tiled client."""
         raise NotImplementedError("Call set_root_client() instead")
-
-    def set_root_client(self) -> None:
-        """Update the model with content from the new root client.
+    
+    def connect_client(self) -> None:
+        """Connect the model's Tiled client to the Tiled server at URL.
         
-            Emits the 'table_changed' signal when a client is defined.
-            Emits the 'client_connection_error' signal when client does not connect."""
+            Emits the 'client_connection_error' signal when client does not connect.
+        """
         try:
             new_client = self.client_from_url(self.url)
         except Exception as exception:
@@ -116,6 +116,11 @@ class TiledCatalogSelector(object):
         self._client = new_client
         self.client_connected.emit(self._client.uri, str(self._client.context.api_uri))
 
+    def reset_client_view(self) -> None:
+        """Prepare the model to receive content from a Tiled server.
+        
+            Emits the 'table_changed' signal when a client is defined.
+        """
         self.node_path_parts = ()
         self._current_page = 0
         if self.client is not None:
@@ -152,7 +157,8 @@ class TiledCatalogSelector(object):
             # TODO: Clean-up previously connected client?
             ...
 
-        self.set_root_client()
+        self.connect_client()
+        self.reset_client_view()
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""
