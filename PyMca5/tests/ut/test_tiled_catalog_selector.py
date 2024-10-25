@@ -78,7 +78,8 @@ def test_on_url_editing_finished(expected_url: str, expected_emit: str):
     assert model.url == expected_url
     assert model._url_buffer == expected_url
 
-    getattr(mock_signal.emit, expected_emit)()
+    assert_expected_emit = getattr(mock_signal.emit, expected_emit)
+    assert_expected_emit()
 
 
 def test_on_connect_clicked():
