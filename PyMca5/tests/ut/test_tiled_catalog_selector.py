@@ -22,7 +22,7 @@ from PyMca5.PyMcaGui.io.TiledCatalogSelector import (
 )
 def test_init(optional_args: Mapping[str, Any]):
     """Can create a TiledCatalogSelector object."""
-    TiledCatalogSelector()
+    TiledCatalogSelector(**optional_args)
 
 
 def test_url_property():
