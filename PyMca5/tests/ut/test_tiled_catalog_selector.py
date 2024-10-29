@@ -22,71 +22,64 @@ from PyMca5.PyMcaGui.io.TiledCatalogSelector import (
 )
 def test_init(optional_args: Mapping[str, Any]):
     """Can create a TiledCatalogSelector object."""
-    TiledCatalogSelector()
+    TiledCatalogSelector(**optional_args)
 
 
-def test_on_url_focus_in_event():
-    """Event handler creates a string buffer for a new url without changing the existing url."""
+def test_url_property():
+    """Model URL is properly returned and set."""
     expected_url = "before"
     model = TiledCatalogSelector(url=expected_url)
-    event = Mock()
-
     assert model.url == expected_url
 
-    model.url_buffer = "Pre-existing content"
-    model.on_url_focus_in_event(event)
-
-    assert model.url_buffer == ""
+    # This is a non-trivial assertion when property getter/setter is used
+    expected_url = "after"
+    model.url = expected_url
     assert model.url == expected_url
-
-
-def test_clearurl_buffer():
-    """FocusIn event clears the string buffer for a new url."""
-    model = TiledCatalogSelector()
-    event = Mock()
-    model.url_buffer = "Previously edited URL"
-
-    buffer_text = model.url_buffer
-    assert len(buffer_text) > 0
-
-    model.on_url_focus_in_event(event)
-    assert model.url_buffer == ""
 
 
 def test_on_url_text_edited():
     """Event handler replaces the url buffer without changing the existing url."""
     expected_url = "before"
     model = TiledCatalogSelector(url=expected_url)
-    model.url_buffer = ""
 
     assert model.url == expected_url
-    assert model.url_buffer == ""
+    # Buffer is pre-populated for the case when no user editing events have been received.
+    assert model._url_buffer == expected_url
 
     expected_text = "Update #1"
     model.on_url_text_edited(expected_text)
-    assert model.url_buffer == expected_text
+    assert model._url_buffer == expected_text
 
     expected_text = "Update #2"
     model.on_url_text_edited(expected_text)
-    assert model.url_buffer == expected_text
+    assert model._url_buffer == expected_text
 
     assert model.url == expected_url
 
 
-def test_on_url_editing_finished():
+@pytest.mark.parametrize(
+    "expected_url, expected_emit",
+    (
+        ("after", "assert_called_once_with"),
+        ("before", "assert_not_called"),
+    )
+)
+def test_on_url_editing_finished(expected_url: str, expected_emit: str):
     """Event handler replaces the existing url with the contents of the buffer."""
-    expected_url = "after"
     model = TiledCatalogSelector(url="before")
-    model.url_buffer = expected_url
+    # Behave as if the user had edited the url in the dialog widget
+    # Behave as if the user had edited the url in the dialog widget
+    model._url_buffer = expected_url
 
     with patch.object(model, "url_changed") as mock_signal:
         mock_signal.emit = Mock()
         model.on_url_editing_finished()
 
     assert model.url == expected_url
-    assert model.url_buffer == ""
+    assert model._url_buffer == expected_url
 
-    mock_signal.emit.assert_called_once_with()
+    assert_expected_emit = getattr(mock_signal.emit, expected_emit)
+    assert_expected_emit()
 
 
 def test_on_connect_clicked():
@@ -192,7 +185,9 @@ def test_validation_on_url_editing_finished(
     caplog.set_level(logging.INFO)
     validators = {"url": [validate_url_scheme]}
     model = TiledCatalogSelector(url="before", validators=validators)
-    model.url_buffer = url
+    # Behave as if the user had edited the url in the dialog widget
+    # Behave as if the user had edited the url in the dialog widget
+    model._url_buffer = url
 
     with patch.object(model, "url_validation_error") as mock_signal:
         mock_signal.emit = Mock()
