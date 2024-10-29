@@ -65,6 +65,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.create_layout()
         self.connect_model_signals()
         self.connect_model_slots()
+        self.connect_self_signals()
         self.initialize_values()
 
     def create_layout(self) -> None:
@@ -251,6 +252,21 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.info_box.setText("")
         self.load_button.setEnabled(False)
 
+    def _on_item_selected(self):
+        model = self.model
+
+        selected = self.catalog_table.selectedItems()
+        if not selected or (item := selected[0]) is self.catalog_breadcrumbs:
+            self._clear_metadata()
+            return
+
+        child_node_path = item.text()
+        model.on_item_selected(child_node_path)
+
+        self.info_box.setText(model.info_text)
+        self.load_button.setEnabled(model.load_button_enabled)
+
+
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
@@ -287,6 +303,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
+
+    def connect_self_signals(self):
+        # TODO find another way to do this?
+        self.catalog_table.itemSelectionChanged.connect(self._on_item_selected)
 
 
 class ClickableQLabel(QLabel):

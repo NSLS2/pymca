@@ -1,6 +1,8 @@
 import functools
 import logging
 from collections import defaultdict
+from datetime import date, datetime
+import json
 from typing import Callable, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import ParseResult, urlparse as _urlparse
 
@@ -12,6 +14,12 @@ from tiled.structures.core import StructureFamily
 
 
 _logger = logging.getLogger(__name__)
+
+
+def json_decode(obj):
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    return str(obj)
 
 
 class TiledCatalogSelectorSignals(QObject):
@@ -44,6 +52,7 @@ class TiledCatalogSelectorSignals(QObject):
 class TiledCatalogSelector(object):
     """View Model for selecting a Tiled CatalogOfBlueskyRuns."""
     Signals = TiledCatalogSelectorSignals
+    SUPPORTED_TYPES = (StructureFamily.array, StructureFamily.container)
 
     def __init__(
         self,
@@ -159,6 +168,26 @@ class TiledCatalogSelector(object):
 
         self.connect_client()
         self.reset_client_view()
+
+    def on_item_selected(self, child_node_path):
+        node_path_parts = self.node_path_parts + (child_node_path,)
+        node = self.get_node(node_path_parts)
+
+        attrs = node.item["attributes"]
+        family = attrs["structure_family"]
+        metadata = json.dumps(attrs["metadata"], indent=2, default=json_decode)
+
+        info = f"<b>type:</b> {family}<br>"
+        if family == StructureFamily.array:
+            shape = attrs["structure"]["macro"]["shape"]
+            info += f"<b>shape:</b> {tuple(shape)}<br>"
+        info += f"<b>metadata:</b> {metadata}"
+        self.info_text = info
+
+        if family in self.SUPPORTED_TYPES:
+            self.load_button_enabled = True
+        else:
+            self.load_button_enabled = False
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""
