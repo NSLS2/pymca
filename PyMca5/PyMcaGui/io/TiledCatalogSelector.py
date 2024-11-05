@@ -13,8 +13,6 @@ from tiled.client.base import BaseClient
 from tiled.structures.core import StructureFamily
 
 
-# TODO: remove this line before committing!!!
-logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
 
