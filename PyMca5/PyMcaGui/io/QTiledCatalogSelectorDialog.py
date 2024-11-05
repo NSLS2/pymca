@@ -266,6 +266,20 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.info_box.setText(model.info_text)
         self.load_button.setEnabled(model.load_button_enabled)
 
+    def _on_item_double_click(self, item):
+        if item is self.catalog_breadcrumbs:
+            self.model.exit_node()
+            return
+        self.model.open_node(item.text())
+
+    def _on_load(self):
+        selected = self.catalog_table.selectedItems()
+        if not selected:
+            return
+        item = selected[0]
+        if item is self.catalog_breadcrumbs:
+            return
+        self.model.open_node(item.text())
 
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
@@ -307,6 +321,10 @@ class QTiledCatalogSelectorDialog(QDialog):
     def connect_self_signals(self):
         # TODO find another way to do this?
         self.catalog_table.itemSelectionChanged.connect(self._on_item_selected)
+        self.catalog_table.itemDoubleClicked.connect(
+            self._on_item_double_click
+        )
+        self.load_button.clicked.connect(self._on_load)
 
 
 class ClickableQLabel(QLabel):

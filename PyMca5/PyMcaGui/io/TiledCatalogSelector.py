@@ -13,6 +13,8 @@ from tiled.client.base import BaseClient
 from tiled.structures.core import StructureFamily
 
 
+# TODO: remove this line before committing!!!
+logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
 
@@ -206,6 +208,7 @@ class TiledCatalogSelector(object):
         """Select a child node within the current Tiled node.
         
             Emits the 'table_changed' signal."""
+        _logger.info("Entering node...")
         self.node_path_parts += (child_node_path,)
         self._current_page = 0
         self.table_changed.emit(self.node_path_parts)
@@ -214,6 +217,7 @@ class TiledCatalogSelector(object):
         """Select parent Tiled node.
         
             Emits the 'table_changed' signal."""
+        _logger.info("Exiting node...")
         self.node_path_parts = self.node_path_parts[:-1]
         self._current_page = 0
         self.table_changed.emit(self.node_path_parts)
