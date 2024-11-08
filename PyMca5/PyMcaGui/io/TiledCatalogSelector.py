@@ -82,6 +82,9 @@ class TiledCatalogSelector(object):
         # A buffer to receive updates while the URL is being edited
         self._url_buffer = self.url
 
+        self.node_path_parts = ()
+        self._current_page = 0
+
     @property
     def url(self) -> str:
         """URL for accessing tiled server data."""
@@ -179,7 +182,7 @@ class TiledCatalogSelector(object):
 
         info = f"<b>type:</b> {family}<br>"
         if family == StructureFamily.array:
-            shape = attrs["structure"]["macro"]["shape"]
+            shape = attrs["structure"]["shape"]
             info += f"<b>shape:</b> {tuple(shape)}<br>"
         info += f"<b>metadata:</b> {metadata}"
         self.info_text = info

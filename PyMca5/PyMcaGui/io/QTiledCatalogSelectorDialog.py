@@ -201,7 +201,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
         # Then add new rows
-        for row in range(self._rows_per_page):
+        for _ in range(self._rows_per_page):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
         node_offset = self._rows_per_page * self.model._current_page

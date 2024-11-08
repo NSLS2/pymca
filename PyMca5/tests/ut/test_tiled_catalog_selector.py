@@ -6,6 +6,7 @@ from typing import Any, Mapping, Sequence
 from unittest.mock import Mock, patch
 
 import pytest
+from tiled.client.base import BaseClient
 
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import (
     TiledCatalogSelector, validate_url_scheme, validate_url_syntax,
@@ -206,3 +207,13 @@ def test_validation_on_url_editing_finished(
         (error_message, ) = call_args.args + tuple(call_args.kwargs.values())
         assert " is not a valid URL." in error_message
         assert "URL must include a scheme." in error_message
+
+
+def test_on_item_selected(tiled_client: BaseClient):
+    """Check if metadata is somewhere in info_text."""
+    model = TiledCatalogSelector(client=tiled_client)
+    model.on_item_selected("a")
+
+    expected_md_key = "apple"
+
+    assert expected_md_key in model.info_text
