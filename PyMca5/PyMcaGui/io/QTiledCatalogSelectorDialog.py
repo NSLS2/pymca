@@ -65,6 +65,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.create_layout()
         self.connect_model_signals()
         self.connect_model_slots()
+        self.connect_self_signals()
         self.initialize_values()
 
     def create_layout(self) -> None:
@@ -200,7 +201,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
         # Then add new rows
-        for row in range(self._rows_per_page):
+        for _ in range(self._rows_per_page):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
         node_offset = self._rows_per_page * self.model._current_page
@@ -251,6 +252,35 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.info_box.setText("")
         self.load_button.setEnabled(False)
 
+    def _on_item_selected(self):
+        model = self.model
+
+        selected = self.catalog_table.selectedItems()
+        if not selected or (item := selected[0]) is self.catalog_breadcrumbs:
+            self._clear_metadata()
+            return
+
+        child_node_path = item.text()
+        model.on_item_selected(child_node_path)
+
+        self.info_box.setText(model.info_text)
+        self.load_button.setEnabled(model.load_button_enabled)
+
+    def _on_item_double_click(self, item):
+        if item is self.catalog_breadcrumbs:
+            self.model.exit_node()
+            return
+        self.model.open_node(item.text())
+
+    def _on_load(self):
+        selected = self.catalog_table.selectedItems()
+        if not selected:
+            return
+        item = selected[0]
+        if item is self.catalog_breadcrumbs:
+            return
+        self.model.open_node(item.text())
+
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
@@ -287,6 +317,14 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
+
+    def connect_self_signals(self):
+        # TODO find another way to do this?
+        self.catalog_table.itemSelectionChanged.connect(self._on_item_selected)
+        self.catalog_table.itemDoubleClicked.connect(
+            self._on_item_double_click
+        )
+        self.load_button.clicked.connect(self._on_load)
 
 
 class ClickableQLabel(QLabel):
