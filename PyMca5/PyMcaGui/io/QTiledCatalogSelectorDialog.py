@@ -177,12 +177,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         """Reset the state of the rows_per_page_selector widget."""
         _logger.debug("QTiledCatalogSelectorDialog.reset_rows_per_page()...")
 
-        # TODO: Should probably make these a property (of the model?)
-        self.rows_per_page_selector.addItems(["5", "10", "25"])
-        self.rows_per_page_selector.setCurrentIndex(0)
-        self._rows_per_page = int(
-            self.rows_per_page_selector.currentText()
+        self.rows_per_page_selector.addItems(
+            [str(option) for option in self.model._rows_per_page_options]
         )
+        self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
 
     def populate_table(self):
         original_state = {}
@@ -201,13 +199,14 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
         # Then add new rows
-        for _ in range(self._rows_per_page):
+        rows_per_page = self.model._rows_per_page_options[self.model._rows_per_page_index]
+        for _ in range(rows_per_page):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
-        node_offset = self._rows_per_page * self.model._current_page
+        node_offset = rows_per_page * self.model._current_page
         # Fetch a page of keys.
         items = self.model.get_current_node().items()[
-            node_offset : node_offset + self._rows_per_page
+            node_offset : node_offset + rows_per_page
         ]
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.model.node_path_parts else 0
@@ -232,7 +231,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             )
 
         # remove extra rows
-        for _ in range(self._rows_per_page - len(items)):
+        for _ in range(rows_per_page - len(items)):
             self.catalog_table.removeRow(self.catalog_table.rowCount() - 1)
 
         headers = [
@@ -317,6 +316,8 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
+        self.next_page.clicked.connect(model.on_next_page_clicked)
+        self.previous_page.clicked.connect(model.on_prev_page_clicked)
 
     def connect_self_signals(self):
         # TODO find another way to do this?

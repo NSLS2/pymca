@@ -61,6 +61,7 @@ class TiledCatalogSelector(object):
         client: BaseClient = None,
         validators: Mapping[str, List[Callable]] = None,
         parent: Optional[QObject] = None,
+        rows_per_page_options: Optional[List[int]] = None,
         *args,
         **kwargs,
     ):
@@ -84,6 +85,11 @@ class TiledCatalogSelector(object):
 
         self.node_path_parts = ()
         self._current_page = 0
+        if rows_per_page_options is None:
+            self._rows_per_page_options = [5, 10, 25]
+        else:
+            self._rows_per_page_options = rows_per_page_options
+        self._rows_per_page_index = 0
 
     @property
     def url(self) -> str:
@@ -191,6 +197,19 @@ class TiledCatalogSelector(object):
             self.load_button_enabled = True
         else:
             self.load_button_enabled = False
+
+    def on_prev_page_clicked(self):
+        if self._current_page != 0:
+            self._current_page -= 1
+            self.table_changed.emit(self.node_path_parts)
+
+    def on_next_page_clicked(self):
+        rows_per_page = self._rows_per_page_options[self._rows_per_page_index]
+        if (
+            self._current_page * rows_per_page
+        ) + rows_per_page < len(self.get_current_node()):
+            self._current_page += 1
+            self.table_changed.emit(self.node_path_parts)
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""
