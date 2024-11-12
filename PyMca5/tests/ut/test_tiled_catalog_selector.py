@@ -2,7 +2,7 @@ import enable_pymca_import  # noqa: F401
 
 import logging
 from contextlib import nullcontext as does_not_raise
-from typing import Any, Mapping, Sequence
+from typing import Any, List, Mapping, Optional, Sequence
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,7 +18,8 @@ from PyMca5.PyMcaGui.io.TiledCatalogSelector import (
     (
         {},
         {"url": "test"},
-        {"validators": {"url": [validate_url_syntax, validate_url_scheme]}}
+        {"validators": {"url": [validate_url_syntax, validate_url_scheme]}},
+        {"rows_per_page_options": [1, 2, 3]}
     )
 )
 def test_init(optional_args: Mapping[str, Any]):
@@ -217,3 +218,17 @@ def test_on_item_selected(tiled_client: BaseClient):
     expected_md_key = "apple"
 
     assert expected_md_key in model.info_text
+
+
+@pytest.mark.parametrize(
+    "input_options, expected",
+    (
+        (None, [5, 10, 25]),
+        ([1, 2, 3], [1, 2, 3])
+    )
+
+)
+def test_rows_per_page_options(input_options: Optional[List[int]], expected: List[int]):
+    """Check rows_per_page_options is used."""
+    model = TiledCatalogSelector(rows_per_page_options=input_options)
+    assert model._rows_per_page_options == expected
