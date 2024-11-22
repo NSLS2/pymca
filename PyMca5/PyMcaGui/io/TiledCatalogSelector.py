@@ -116,7 +116,7 @@ class TiledCatalogSelector(object):
     @client.setter
     def client(self, _):
         """Do not directly replace the root Tiled client."""
-        raise NotImplementedError("Call set_root_client() instead")
+        raise NotImplementedError("Call connect_client() instead")
 
     def connect_client(self) -> None:
         """Connect the model's Tiled client to the Tiled server at URL.

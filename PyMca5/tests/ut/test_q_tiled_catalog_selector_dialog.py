@@ -81,3 +81,51 @@ def test_url_set_through_model(
         dialog.connect_button.click()
 
     assert expected_url in dialog.connection_label.text()
+
+
+def test_correct_rows_displayed(
+    qtbot: QtBot,
+    tiled_client_dialog_model: TiledCatalogSelector,
+):
+    """Check correct number of rows and contents are displyed."""
+    dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
+    dialog.show()
+    qtbot.addWidget(dialog)
+
+    dialog.model.reset_client_view()
+
+    assert dialog.catalog_table.rowCount() == 5
+
+    expected_text = ["a", "b", "c", "d", "e"]
+
+    for row_num, text in enumerate(expected_text):
+        assert dialog.catalog_table.item(row_num, 0).text() == text
+
+
+def test_navigation(
+    qtbot: QtBot,
+    tiled_client_dialog_model: TiledCatalogSelector,
+):
+    """Check table page contents when going to next/previous pages."""
+    dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
+    dialog.show()
+    qtbot.addWidget(dialog)
+
+    dialog.model.reset_client_view()
+
+    assert dialog.rows_per_page_selector.currentText() == "5"
+
+    dialog.model.on_next_page_clicked()
+
+    # Check last value shows in new page
+    expected_text = ["f"]
+
+    for row_num, text in enumerate(expected_text):
+        assert dialog.catalog_table.item(row_num, 0).text() == text
+
+    dialog.model.on_prev_page_clicked()
+
+    expected_text = ["a", "b", "c", "d", "e"]
+
+    for row_num, text in enumerate(expected_text):
+        assert dialog.catalog_table.item(row_num, 0).text() == text

@@ -6,6 +6,7 @@ import numpy
 from PyQt5.QtWidgets import QApplication
 from tiled.server.app import build_app
 from tiled.client import Context, from_context
+from tiled.client.base import BaseClient
 from tiled.adapters.array import ArrayAdapter
 from tiled.adapters.mapping import MapAdapter
 
@@ -22,6 +23,15 @@ tree = MapAdapter(
         ),
         "c": ArrayAdapter.from_array(
             numpy.arange(10), metadata={"cantalope": "orange", "animal": "cat"}
+        ),
+        "d": ArrayAdapter.from_array(
+            numpy.arange(10), metadata={"durian": "green", "animal": "turtle"}
+        ),
+        "e": ArrayAdapter.from_array(
+            numpy.arange(10), metadata={"elderberry": "purple", "animal": "cat"}
+        ),
+        "f": ArrayAdapter.from_array(
+            numpy.arange(10), metadata={"fig": "purple", "animal": "cat"}
         ),
     }
 )
@@ -42,4 +52,11 @@ def tiled_client():
 def dialog_model(qapp: QApplication):
     """TiledCatalogSelector that is compatible with QtBot-based tests."""
     model = TiledCatalogSelector(parent=qapp)
+    yield model
+
+
+@pytest.fixture
+def tiled_client_dialog_model(qapp: QApplication, tiled_client: BaseClient):
+    """TiledCatalogSelector that is compatible with QtBot-based tests."""
+    model = TiledCatalogSelector(parent=qapp, client=tiled_client)
     yield model

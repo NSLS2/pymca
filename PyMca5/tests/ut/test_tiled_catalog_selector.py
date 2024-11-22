@@ -3,7 +3,7 @@ import enable_pymca_import  # noqa: F401
 import logging
 from contextlib import nullcontext as does_not_raise
 from typing import Any, List, Mapping, Optional, Sequence
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from tiled.client.base import BaseClient
@@ -232,3 +232,35 @@ def test_rows_per_page_options(input_options: Optional[List[int]], expected: Lis
     """Check rows_per_page_options is used."""
     model = TiledCatalogSelector(rows_per_page_options=input_options)
     assert model._rows_per_page_options == expected
+
+
+def test_navigation(tiled_client: BaseClient):
+    """Check navigation to next/previous pages updates current_page and emits table_changed."""
+    model = TiledCatalogSelector(client=tiled_client)
+
+    assert model._current_page == 0
+
+    with patch.object(model, "table_changed") as mock_signal:
+        mock_signal.emit = Mock()
+
+        model.on_next_page_clicked()
+        assert model._current_page == 1
+        assert mock_signal.emit.call_count == 1
+
+        model.on_prev_page_clicked()
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 2
+
+        # Check current_page doesn't go beyond last page
+        mock_signal.emit.reset_mock()
+        model.on_next_page_clicked()
+        model.on_next_page_clicked()
+        assert model._current_page == 1
+        assert mock_signal.emit.call_count == 1
+
+        # Check current_page doesn't go below first page
+        mock_signal.emit.reset_mock()
+        model.on_prev_page_clicked()
+        model.on_prev_page_clicked()
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 1
