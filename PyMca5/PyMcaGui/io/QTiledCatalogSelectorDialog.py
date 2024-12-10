@@ -1,5 +1,5 @@
 import logging
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from typing import Callable, Mapping, Optional, Tuple
 
 from PyQt5.QtCore import QEvent, QObject
@@ -50,6 +50,7 @@ class PassThroughEventFilter(QObject):
 
 class QTiledCatalogSelectorDialog(QDialog):
     """A dialog window to find and select a Tiled CatalogOfBlueskyRuns."""
+    NODE_ID_MAXLEN = 8
     def __init__(
         self,
         model: TiledCatalogSelector,
@@ -105,8 +106,11 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.navigation_widget.setLayout(navigation_layout)
 
         # Current path layout
-        self.current_path_label = QLabel()
-        # self._rebuild_current_path_label()
+        self.current_path_widget = QWidget()
+        self.current_path_layout = QHBoxLayout()
+        self.current_path_layout.setAlignment(Qt.AlignLeft)
+        self.current_path_widget.setLayout(self.current_path_layout)
+        self._rebuild_current_path_layout()
 
         # Catalog table elements
         self.catalog_table = QTableWidget(0, 1)
@@ -140,7 +144,7 @@ class QTiledCatalogSelectorDialog(QDialog):
 
         # Catalog table layout
         catalog_table_layout = QVBoxLayout()
-        catalog_table_layout.addWidget(self.current_path_label)
+        catalog_table_layout.addWidget(self.current_path_widget)
         catalog_table_layout.addLayout(catalog_info_layout)
         catalog_table_layout.addWidget(self.navigation_widget)
         catalog_table_layout.addStretch(1)
@@ -172,6 +176,35 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.url_entry.setPlaceholderText("Enter a url")
         else:
             self.url_entry.setText(self.model.url)
+
+    def _rebuild_current_path_layout(self):
+        # TODO: should this be OrderedDict or list?
+        breadcrumbs = OrderedDict({"root": ClickableQLabel("root")})
+        for node_id in self.model.node_path_parts:
+            if len(node_id) > self.NODE_ID_MAXLEN:
+                short_node_id = node_id[: self.NODE_ID_MAXLEN - 3] + "..."
+                breadcrumbs[node_id] = ClickableQLabel(short_node_id)
+            else:
+                breadcrumbs[node_id] = ClickableQLabel(node_id)
+        print(breadcrumbs)
+
+        print(f"   before {self.current_path_widget.layout() = }")
+        
+        # remove all widgets from current path layout
+        self.remove_layout_widgets()
+
+        for bc_label in breadcrumbs.values():
+            self.current_path_layout.addWidget(bc_label)
+            self.current_path_layout.addWidget(QLabel(" / "))
+        # self.current_path_widget.setLayout(current_path_layout)
+
+        print(f"   after {self.current_path_widget.layout() = }")
+
+    def remove_layout_widgets(self):
+        for index in reversed(range(self.current_path_layout.count())):
+            widget = self.current_path_layout.itemAt(index).widget()
+            self.current_path_layout.removeWidget(widget)
+            widget.deleteLater()
 
     def reset_rows_per_page(self) -> None:
         """Reset the state of the rows_per_page_selector widget."""
@@ -299,6 +332,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         def on_table_changed(node_path_parts: Tuple[str]):
             _logger.debug(f"on_table_changed(): {node_path_parts = }")
             self.populate_table()
+            self._rebuild_current_path_layout()
 
         @self.model.url_validation_error.connect
         def on_url_validation_error(error_msg: str):
@@ -330,9 +364,11 @@ class QTiledCatalogSelectorDialog(QDialog):
 
 class ClickableQLabel(QLabel):
     clicked = Signal()
+    clicked_text = Signal(str)
 
     def mousePressEvent(self, event):
         self.clicked.emit()
+        self.clicked_text.emit(self.text())
 
 
 if __name__ == '__main__':
