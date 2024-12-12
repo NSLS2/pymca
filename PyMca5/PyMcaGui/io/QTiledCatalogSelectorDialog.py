@@ -179,26 +179,22 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def _rebuild_current_path_layout(self):
         # TODO: should this be OrderedDict or list?
-        breadcrumbs = OrderedDict({"root": ClickableQLabel("root")})
-        for node_id in self.model.node_path_parts:
+        breadcrumbs = OrderedDict({"root": ClickableIndexedQLabel("root", index=0)})
+        breadcrumbs["root"].clicked_index.connect(self._on_breadcrumb_clicked)
+        for i, node_id in enumerate(self.model.node_path_parts, start=1):
             if len(node_id) > self.NODE_ID_MAXLEN:
                 short_node_id = node_id[: self.NODE_ID_MAXLEN - 3] + "..."
-                breadcrumbs[node_id] = ClickableQLabel(short_node_id)
+                breadcrumbs[node_id] = ClickableIndexedQLabel(short_node_id, index=i)
             else:
-                breadcrumbs[node_id] = ClickableQLabel(node_id)
-        print(breadcrumbs)
-
-        print(f"   before {self.current_path_widget.layout() = }")
+                breadcrumbs[node_id] = ClickableIndexedQLabel(node_id, index=i)
+            breadcrumbs[node_id].clicked_index.connect(self._on_breadcrumb_clicked)
         
-        # remove all widgets from current path layout
+        # remove all widgets from current_path_layout
         self.remove_layout_widgets()
 
         for bc_label in breadcrumbs.values():
             self.current_path_layout.addWidget(bc_label)
             self.current_path_layout.addWidget(QLabel(" / "))
-        # self.current_path_widget.setLayout(current_path_layout)
-
-        print(f"   after {self.current_path_widget.layout() = }")
 
     def remove_layout_widgets(self):
         for index in reversed(range(self.current_path_layout.count())):
@@ -313,6 +309,9 @@ class QTiledCatalogSelectorDialog(QDialog):
             return
         self.model.open_node(item.text())
 
+    def _on_breadcrumb_clicked(self, node_index):
+        self.model.jump_to_node(node_index)
+
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
@@ -364,11 +363,21 @@ class QTiledCatalogSelectorDialog(QDialog):
 
 class ClickableQLabel(QLabel):
     clicked = Signal()
-    clicked_text = Signal(str)
 
     def mousePressEvent(self, event):
         self.clicked.emit()
-        self.clicked_text.emit(self.text())
+
+
+class ClickableIndexedQLabel(ClickableQLabel):
+    clicked_index = Signal(int)
+
+    def __init__(self, text, index):
+        super().__init__(text)
+        self.index = index
+
+    def mousePressEvent(self, event):
+        # TODO: should this be clicked instead of clicked_index?
+        self.clicked_index.emit(self.index)
 
 
 if __name__ == '__main__':
