@@ -234,7 +234,7 @@ def test_rows_per_page_options(input_options: Optional[List[int]], expected: Lis
     assert model._rows_per_page_options == expected
 
 
-def test_navigation(tiled_client: BaseClient):
+def test_page_navigation(tiled_client: BaseClient):
     """Check navigation to next/previous pages updates current_page and emits table_changed."""
     model = TiledCatalogSelector(client=tiled_client)
 
@@ -264,3 +264,44 @@ def test_navigation(tiled_client: BaseClient):
         model.on_prev_page_clicked()
         assert model._current_page == 0
         assert mock_signal.emit.call_count == 1
+
+
+def test_node_navigation(tiled_client: BaseClient):
+    """Check navigating between nodes updates node_path_parts/_current_page and emits table_changed."""
+    model = TiledCatalogSelector(client=tiled_client, rows_per_page_options=[1, 2, 3])
+    assert model.node_path_parts == ()
+    assert model._current_page == 0
+
+    with patch.object(model, "table_changed") as mock_signal:
+        mock_signal.emit = Mock()
+
+        model.enter_node("a")
+        expected_node_path_parts = ("a",)
+        assert model.node_path_parts == expected_node_path_parts
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 1
+
+        model.exit_node()
+        expected_node_path_parts = ()
+        assert model.node_path_parts == expected_node_path_parts
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 2
+
+        model.enter_node("structured_data")
+        expected_node_path_parts = ("structured_data",)
+        assert model.node_path_parts == expected_node_path_parts
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 3
+        model.on_next_page_clicked()
+        assert model._current_page == 1
+        model.enter_node("people")
+        expected_node_path_parts = ("structured_data", "people",)
+        assert model.node_path_parts == expected_node_path_parts
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 5
+
+        model.jump_to_node(1)
+        expected_node_path_parts = ("structured_data",)
+        assert model.node_path_parts == expected_node_path_parts
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 6
