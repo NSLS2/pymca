@@ -179,7 +179,7 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def _rebuild_current_path_layout(self):
         bc_widget = ClickableIndexedQLabel("root", index=0)
-        bc_widget.clicked_index.connect(self._on_breadcrumb_clicked)
+        bc_widget.clicked.connect(self._on_breadcrumb_clicked)
         breadcrumbs = [bc_widget]
 
         for i, node_id in enumerate(self.model.node_path_parts, start=1):
@@ -189,7 +189,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             else:
                 bc_widget = ClickableIndexedQLabel(node_id, index=i)
 
-            bc_widget.clicked_index.connect(self._on_breadcrumb_clicked)
+            bc_widget.clicked.connect(self._on_breadcrumb_clicked)
             breadcrumbs.append(bc_widget)
         
         # remove all widgets from current_path_layout
@@ -372,15 +372,14 @@ class ClickableQLabel(QLabel):
 
 
 class ClickableIndexedQLabel(ClickableQLabel):
-    clicked_index = Signal(int)
+    clicked = Signal(int)
 
     def __init__(self, text, index):
         super().__init__(text)
         self.index = index
 
     def mousePressEvent(self, event):
-        # TODO: should this be clicked instead of clicked_index?
-        self.clicked_index.emit(self.index)
+        self.clicked.emit(self.index)
 
 
 if __name__ == '__main__':

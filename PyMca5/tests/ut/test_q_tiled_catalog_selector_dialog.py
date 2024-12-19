@@ -198,14 +198,14 @@ def test_clicking_breadcrumbs(
 
     # Click "struc..." breadcrumb
     bc_widget = dialog.current_path_layout.itemAt(2).widget()
-    bc_widget.clicked_index.emit(1)
+    bc_widget.clicked.emit(1)
     expected_text = ["..", "pets"]
     for row_num, text in enumerate(expected_text):
         assert dialog.catalog_table.item(row_num, 0).text() == text
 
     # Click root breadcrumb
     dialog.current_path_layout.itemAt(0)
-    bc_widget.clicked_index.emit(0)
+    bc_widget.clicked.emit(0)
     expected_text = ["a", "b", "c", "d", "e"]
     for row_num, text in enumerate(expected_text):
         assert dialog.catalog_table.item(row_num, 0).text() == text
