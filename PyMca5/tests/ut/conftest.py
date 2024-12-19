@@ -33,6 +33,23 @@ tree = MapAdapter(
         "f": ArrayAdapter.from_array(
             numpy.arange(10), metadata={"fig": "purple", "animal": "cat"}
         ),
+        "structured_data": MapAdapter(
+        {
+            "pets": ArrayAdapter.from_array(
+                numpy.array(
+                    [("Rex", 9, 81.0), ("Fido", 3, 27.0)],
+                    dtype=[("name", "U10"), ("age", "i4"), ("weight", "f4")],
+                )
+            ),
+            "people": ArrayAdapter.from_array(
+                numpy.array(
+                    [("Alice", 24), ("Bob", 37)],
+                    dtype=[("name", "U10"), ("age", "i4")],
+                )
+            ),
+        },
+        metadata={"animal": "cat", "color": "green"},
+    ),
     }
 )
 
