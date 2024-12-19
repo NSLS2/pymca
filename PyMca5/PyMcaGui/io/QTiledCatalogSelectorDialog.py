@@ -1,5 +1,5 @@
 import logging
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 from typing import Callable, Mapping, Optional, Tuple
 
 from PyQt5.QtCore import QEvent, QObject
@@ -178,22 +178,25 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.url_entry.setText(self.model.url)
 
     def _rebuild_current_path_layout(self):
-        # TODO: should this be OrderedDict or list?
-        breadcrumbs = OrderedDict({"root": ClickableIndexedQLabel("root", index=0)})
-        breadcrumbs["root"].clicked_index.connect(self._on_breadcrumb_clicked)
+        bc_widget = ClickableIndexedQLabel("root", index=0)
+        bc_widget.clicked_index.connect(self._on_breadcrumb_clicked)
+        breadcrumbs = [bc_widget]
+
         for i, node_id in enumerate(self.model.node_path_parts, start=1):
             if len(node_id) > self.NODE_ID_MAXLEN:
                 short_node_id = node_id[: self.NODE_ID_MAXLEN - 3] + "..."
-                breadcrumbs[node_id] = ClickableIndexedQLabel(short_node_id, index=i)
+                bc_widget = ClickableIndexedQLabel(short_node_id, index=i)
             else:
-                breadcrumbs[node_id] = ClickableIndexedQLabel(node_id, index=i)
-            breadcrumbs[node_id].clicked_index.connect(self._on_breadcrumb_clicked)
+                bc_widget = ClickableIndexedQLabel(node_id, index=i)
+
+            bc_widget.clicked_index.connect(self._on_breadcrumb_clicked)
+            breadcrumbs.append(bc_widget)
         
         # remove all widgets from current_path_layout
         self.remove_layout_widgets()
 
-        for bc_label in breadcrumbs.values():
-            self.current_path_layout.addWidget(bc_label)
+        for breadcrumb in breadcrumbs:
+            self.current_path_layout.addWidget(breadcrumb)
             self.current_path_layout.addWidget(QLabel(" / "))
 
     def remove_layout_widgets(self):
