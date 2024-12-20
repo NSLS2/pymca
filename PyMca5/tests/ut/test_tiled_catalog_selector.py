@@ -292,8 +292,11 @@ def test_node_navigation(tiled_client: BaseClient):
         assert model.node_path_parts == expected_node_path_parts
         assert model._current_page == 0
         assert mock_signal.emit.call_count == 3
+        # Stay in same node, go to next page
         model.on_next_page_clicked()
         assert model._current_page == 1
+        assert mock_signal.emit.call_count == 4
+        # Go into a nested node
         model.enter_node("people")
         expected_node_path_parts = ("structured_data", "people",)
         assert model.node_path_parts == expected_node_path_parts

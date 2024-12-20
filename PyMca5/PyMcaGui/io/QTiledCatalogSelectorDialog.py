@@ -178,7 +178,9 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.url_entry.setText(self.model.url)
 
     def _rebuild_current_path_layout(self):
+        """Reset the clickable widgets for the current path breadcrumbs."""
         bc_widget = ClickableIndexedQLabel("root", index=0)
+        bc_widget.setObjectName("root")
         bc_widget.clicked.connect(self._on_breadcrumb_clicked)
         breadcrumbs = [bc_widget]
 
@@ -188,18 +190,20 @@ class QTiledCatalogSelectorDialog(QDialog):
                 bc_widget = ClickableIndexedQLabel(short_node_id, index=i)
             else:
                 bc_widget = ClickableIndexedQLabel(node_id, index=i)
-
+            
+            bc_widget.setObjectName(node_id)
             bc_widget.clicked.connect(self._on_breadcrumb_clicked)
             breadcrumbs.append(bc_widget)
         
         # remove all widgets from current_path_layout
-        self.remove_layout_widgets()
+        self.remove_current_path_layout_widgets()
 
         for breadcrumb in breadcrumbs:
             self.current_path_layout.addWidget(breadcrumb)
             self.current_path_layout.addWidget(QLabel(" / "))
 
-    def remove_layout_widgets(self):
+    def remove_current_path_layout_widgets(self):
+        """Remove unneeded path widgets and free the memory."""
         for index in reversed(range(self.current_path_layout.count())):
             widget = self.current_path_layout.itemAt(index).widget()
             self.current_path_layout.removeWidget(widget)
@@ -368,6 +372,9 @@ class ClickableQLabel(QLabel):
     clicked = Signal()
 
     def mousePressEvent(self, event):
+        self.click()
+
+    def click(self):
         self.clicked.emit()
 
 
@@ -379,6 +386,9 @@ class ClickableIndexedQLabel(ClickableQLabel):
         self.index = index
 
     def mousePressEvent(self, event):
+        self.click()
+
+    def click(self):
         self.clicked.emit(self.index)
 
 
