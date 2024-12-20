@@ -50,6 +50,7 @@ class PassThroughEventFilter(QObject):
 
 class QTiledCatalogSelectorDialog(QDialog):
     """A dialog window to find and select a Tiled CatalogOfBlueskyRuns."""
+    NODE_ID_MAXLEN = 8
     def __init__(
         self,
         model: TiledCatalogSelector,
@@ -105,8 +106,11 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.navigation_widget.setLayout(navigation_layout)
 
         # Current path layout
-        self.current_path_label = QLabel()
-        # self._rebuild_current_path_label()
+        self.current_path_widget = QWidget()
+        self.current_path_layout = QHBoxLayout()
+        self.current_path_layout.setAlignment(Qt.AlignLeft)
+        self.current_path_widget.setLayout(self.current_path_layout)
+        self._rebuild_current_path_layout()
 
         # Catalog table elements
         self.catalog_table = QTableWidget(0, 1)
@@ -140,7 +144,7 @@ class QTiledCatalogSelectorDialog(QDialog):
 
         # Catalog table layout
         catalog_table_layout = QVBoxLayout()
-        catalog_table_layout.addWidget(self.current_path_label)
+        catalog_table_layout.addWidget(self.current_path_widget)
         catalog_table_layout.addLayout(catalog_info_layout)
         catalog_table_layout.addWidget(self.navigation_widget)
         catalog_table_layout.addStretch(1)
@@ -172,6 +176,38 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.url_entry.setPlaceholderText("Enter a url")
         else:
             self.url_entry.setText(self.model.url)
+
+    def _rebuild_current_path_layout(self):
+        """Reset the clickable widgets for the current path breadcrumbs."""
+        bc_widget = ClickableIndexedQLabel("root", index=0)
+        bc_widget.setObjectName("root")
+        bc_widget.clicked.connect(self._on_breadcrumb_clicked)
+        breadcrumbs = [bc_widget]
+
+        for i, node_id in enumerate(self.model.node_path_parts, start=1):
+            if len(node_id) > self.NODE_ID_MAXLEN:
+                short_node_id = node_id[: self.NODE_ID_MAXLEN - 3] + "..."
+                bc_widget = ClickableIndexedQLabel(short_node_id, index=i)
+            else:
+                bc_widget = ClickableIndexedQLabel(node_id, index=i)
+            
+            bc_widget.setObjectName(node_id)
+            bc_widget.clicked.connect(self._on_breadcrumb_clicked)
+            breadcrumbs.append(bc_widget)
+        
+        # remove all widgets from current_path_layout
+        self.remove_current_path_layout_widgets()
+
+        for breadcrumb in breadcrumbs:
+            self.current_path_layout.addWidget(breadcrumb)
+            self.current_path_layout.addWidget(QLabel(" / "))
+
+    def remove_current_path_layout_widgets(self):
+        """Remove unneeded path widgets and free the memory."""
+        for index in reversed(range(self.current_path_layout.count())):
+            widget = self.current_path_layout.itemAt(index).widget()
+            self.current_path_layout.removeWidget(widget)
+            widget.deleteLater()
 
     def reset_rows_per_page(self) -> None:
         """Reset the state of the rows_per_page_selector widget."""
@@ -280,6 +316,9 @@ class QTiledCatalogSelectorDialog(QDialog):
             return
         self.model.open_node(item.text())
 
+    def _on_breadcrumb_clicked(self, node_index):
+        self.model.jump_to_node(node_index)
+
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
         _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
@@ -299,6 +338,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         def on_table_changed(node_path_parts: Tuple[str]):
             _logger.debug(f"on_table_changed(): {node_path_parts = }")
             self.populate_table()
+            self._rebuild_current_path_layout()
 
         @self.model.url_validation_error.connect
         def on_url_validation_error(error_msg: str):
@@ -332,7 +372,24 @@ class ClickableQLabel(QLabel):
     clicked = Signal()
 
     def mousePressEvent(self, event):
+        self.click()
+
+    def click(self):
         self.clicked.emit()
+
+
+class ClickableIndexedQLabel(ClickableQLabel):
+    clicked = Signal(int)
+
+    def __init__(self, text, index):
+        super().__init__(text)
+        self.index = index
+
+    def mousePressEvent(self, event):
+        self.click()
+
+    def click(self):
+        self.clicked.emit(self.index)
 
 
 if __name__ == '__main__':
