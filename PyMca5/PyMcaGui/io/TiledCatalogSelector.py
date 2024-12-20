@@ -198,13 +198,22 @@ class TiledCatalogSelector(object):
         else:
             self.load_button_enabled = False
 
+    def on_rows_per_page_changed(self, index):
+        self._rows_per_page_index = index
+        self._current_page = 0
+        self.table_changed.emit(self.node_path_parts)
+
+    # TODO: make this a property
+    def rows_per_page(self):
+        return self._rows_per_page_options[self._rows_per_page_index]
+
     def on_prev_page_clicked(self):
         if self._current_page != 0:
             self._current_page -= 1
             self.table_changed.emit(self.node_path_parts)
 
     def on_next_page_clicked(self):
-        rows_per_page = self._rows_per_page_options[self._rows_per_page_index]
+        rows_per_page = self.rows_per_page()
         if (
             self._current_page * rows_per_page
         ) + rows_per_page < len(self.get_current_node()):
