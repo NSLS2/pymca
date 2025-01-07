@@ -223,9 +223,9 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
 
     def _set_current_location_label(self):
-        starting_index = self.model._current_page * self.model.rows_per_page() + 1
+        starting_index = self.model._current_page * self.model.rows_per_page + 1
         ending_index = min(
-            self.model.rows_per_page() * (self.model._current_page + 1),
+            self.model.rows_per_page * (self.model._current_page + 1),
             len(self.model.get_current_node()),
         )
         current_location_text = f"{starting_index}-{ending_index} of {len(self.model.get_current_node())}"
@@ -248,7 +248,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
         # Then add new rows
-        rows_per_page = self.model.rows_per_page()
+        rows_per_page = self.model.rows_per_page
         for _ in range(rows_per_page):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
