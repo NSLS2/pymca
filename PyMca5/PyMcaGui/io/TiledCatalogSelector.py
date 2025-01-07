@@ -1,4 +1,5 @@
 import functools
+from math import ceil
 import logging
 from collections import defaultdict
 from datetime import date, datetime
@@ -207,6 +208,10 @@ class TiledCatalogSelector(object):
     def rows_per_page(self):
         return self._rows_per_page_options[self._rows_per_page_index]
 
+    def on_first_page_clicked(self):
+        self._current_page = 0
+        self.table_changed.emit(self.node_path_parts)
+
     def on_prev_page_clicked(self):
         if self._current_page != 0:
             self._current_page -= 1
@@ -219,6 +224,10 @@ class TiledCatalogSelector(object):
         ) + rows_per_page < len(self.get_current_node()):
             self._current_page += 1
             self.table_changed.emit(self.node_path_parts)
+
+    def on_last_page_clicked(self):
+        self._current_page = ceil(len(self.get_current_node()) / self.rows_per_page()) - 1
+        self.table_changed.emit(self.node_path_parts)
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""

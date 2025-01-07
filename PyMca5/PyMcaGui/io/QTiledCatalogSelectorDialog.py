@@ -92,8 +92,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.rows_per_page_selector = QComboBox()
 
         self.current_location_label = QLabel()
+        self.first_page = ClickableQLabel("<<")
         self.previous_page = ClickableQLabel("<")
         self.next_page = ClickableQLabel(">")
+        self.last_page = ClickableQLabel(">>")
         self.navigation_widget = QWidget()
 
         # Navigation layout
@@ -101,8 +103,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         navigation_layout.addWidget(self.rows_per_page_label)
         navigation_layout.addWidget(self.rows_per_page_selector)
         navigation_layout.addWidget(self.current_location_label)
+        navigation_layout.addWidget(self.first_page)
         navigation_layout.addWidget(self.previous_page)
         navigation_layout.addWidget(self.next_page)
+        navigation_layout.addWidget(self.last_page)
         self.navigation_widget.setLayout(navigation_layout)
 
         # Current path layout
@@ -369,8 +373,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
+        self.first_page.clicked.connect(model.on_first_page_clicked)
         self.next_page.clicked.connect(model.on_next_page_clicked)
         self.previous_page.clicked.connect(model.on_prev_page_clicked)
+        self.last_page.clicked.connect(model.on_last_page_clicked)
         self.rows_per_page_selector.currentIndexChanged.connect(self.model.on_rows_per_page_changed)
 
     def connect_self_signals(self):
