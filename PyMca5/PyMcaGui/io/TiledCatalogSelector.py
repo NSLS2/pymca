@@ -226,9 +226,8 @@ class TiledCatalogSelector(object):
             self.table_changed.emit(self.node_path_parts)
 
     def on_last_page_clicked(self):
-        # TODO: math.ceil gives the wrong answer for really large numbers
+        # NOTE: math.ceil gives the wrong answer for really large numbers
         # Solution 4 in this answer: https://stackoverflow.com/a/54585138
-        # Do we worry about this for our use case?
         self._current_page = ceil(len(self.get_current_node()) / self.rows_per_page) - 1
         self.table_changed.emit(self.node_path_parts)
 
