@@ -109,7 +109,7 @@ def test_navigation(
     qtbot: QtBot,
     tiled_client_dialog_model: TiledCatalogSelector,
 ):
-    """Check table page contents when going to next/previous pages."""
+    """Check table page contents when going to first/next/previous/last pages."""
     dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
     dialog.show()
     qtbot.addWidget(dialog)
@@ -120,8 +120,10 @@ def test_navigation(
 
     dialog.model.on_next_page_clicked()
 
-    # Check last value shows in new page
-    expected_text = ["f"]
+    # Check last values show in new page
+    expected_text = ["f", "structured_data"]
+
+    assert len(expected_text) == dialog.catalog_table.rowCount()
 
     for row_num, text in enumerate(expected_text):
         assert dialog.catalog_table.item(row_num, 0).text() == text
@@ -130,13 +132,37 @@ def test_navigation(
 
     expected_text = ["a", "b", "c", "d", "e"]
 
+    assert len(expected_text) == dialog.catalog_table.rowCount()
+
+    for row_num, text in enumerate(expected_text):
+        assert dialog.catalog_table.item(row_num, 0).text() == text
+
+    dialog.model.on_next_page_clicked()
+
+    # Check last values show in last page
+    dialog.model.on_last_page_clicked()
+
+    expected_text = ["f", "structured_data"]
+
+    assert len(expected_text) == dialog.catalog_table.rowCount()
+
+    for row_num, text in enumerate(expected_text):
+        assert dialog.catalog_table.item(row_num, 0).text() == text
+
+    # Check first values show in first page
+    dialog.model.on_first_page_clicked()
+
+    expected_text = ["a", "b", "c", "d", "e"]
+
+    assert len(expected_text) == dialog.catalog_table.rowCount()
+
     for row_num, text in enumerate(expected_text):
         assert dialog.catalog_table.item(row_num, 0).text() == text
 
 
 def test_current_page_layout(
-        qtbot: QtBot,
-        tiled_client_dialog_model: TiledCatalogSelector
+    qtbot: QtBot,
+    tiled_client_dialog_model: TiledCatalogSelector,
 ):
     """Check current page layout of breadcrumbs updates correctly."""
     dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
@@ -186,8 +212,8 @@ def test_current_page_layout(
 
 
 def test_clicking_breadcrumbs(
-        qtbot: QtBot,
-        tiled_client_dialog_model: TiledCatalogSelector
+    qtbot: QtBot,
+    tiled_client_dialog_model: TiledCatalogSelector,
 ):
     """Check clicking breadcrumbs displays correct contents."""
     dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
@@ -209,3 +235,48 @@ def test_clicking_breadcrumbs(
     expected_text = ["a", "b", "c", "d", "e"]
     for row_num, text in enumerate(expected_text):
         assert dialog.catalog_table.item(row_num, 0).text() == text
+
+
+def test_current_location_label(
+    qtbot: QtBot,
+    tiled_client_dialog_model: TiledCatalogSelector,
+):
+    """Check the current location is properly displayed."""
+    dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
+    dialog.show()
+    qtbot.addWidget(dialog)
+
+    assert dialog.rows_per_page_selector.currentText() == "5"
+    assert f"of {len(dialog.model.client)}" in dialog.current_location_label.text()
+    
+    assert "1-5" in dialog.current_location_label.text()
+
+    # Go to last page
+    dialog.model.on_last_page_clicked()
+    assert f"6-{len(dialog.model.client)}" in dialog.current_location_label.text()
+
+    # Go to first page
+    dialog.model.on_first_page_clicked()
+    assert "1-5" in dialog.current_location_label.text()
+
+def test_rows_per_page_selector_changed_updates_table(
+    qtbot: QtBot,
+    tiled_client_dialog_model: TiledCatalogSelector,
+):
+    """Check the table is updated when the rows per page is changed."""
+    dialog = QTiledCatalogSelectorDialog(model=tiled_client_dialog_model)
+    dialog.show()
+    qtbot.addWidget(dialog)
+
+    assert dialog.rows_per_page_selector.currentText() == "5"
+    assert dialog.catalog_table.rowCount() == 5
+
+    # Change to 10 rows per page (index 1)
+    dialog.rows_per_page_selector.setCurrentIndex(1)
+    assert dialog.rows_per_page_selector.currentText() == "10"
+    assert dialog.catalog_table.rowCount() == len(dialog.model.client)
+
+    # Change back to 5 rows per page (index 0)
+    dialog.rows_per_page_selector.setCurrentIndex(0)
+    assert dialog.rows_per_page_selector.currentText() == "5"
+    assert dialog.catalog_table.rowCount() == 5
