@@ -235,7 +235,7 @@ def test_rows_per_page_options(input_options: Optional[List[int]], expected: Lis
 
 
 def test_page_navigation(tiled_client: BaseClient):
-    """Check navigation to next/previous pages updates current_page and emits table_changed."""
+    """Check navigation to/from pages updates current_page and emits table_changed."""
     model = TiledCatalogSelector(client=tiled_client)
 
     assert model._current_page == 0
@@ -264,6 +264,16 @@ def test_page_navigation(tiled_client: BaseClient):
         model.on_prev_page_clicked()
         assert model._current_page == 0
         assert mock_signal.emit.call_count == 1
+
+        # Check last and first page navigation
+        mock_signal.emit.reset_mock()
+        model.on_last_page_clicked()
+        assert model._current_page == 1
+        assert mock_signal.emit.call_count == 1
+
+        model.on_first_page_clicked()
+        assert model._current_page == 0
+        assert mock_signal.emit.call_count == 2
 
 
 def test_node_navigation(tiled_client: BaseClient):

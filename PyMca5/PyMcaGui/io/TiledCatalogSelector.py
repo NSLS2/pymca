@@ -1,4 +1,5 @@
 import functools
+from math import ceil
 import logging
 from collections import defaultdict
 from datetime import date, datetime
@@ -117,6 +118,10 @@ class TiledCatalogSelector(object):
     def client(self, _):
         """Do not directly replace the root Tiled client."""
         raise NotImplementedError("Call connect_client() instead")
+    
+    @property
+    def rows_per_page(self):
+        return self._rows_per_page_options[self._rows_per_page_index]
 
     def connect_client(self) -> None:
         """Connect the model's Tiled client to the Tiled server at URL.
@@ -198,18 +203,33 @@ class TiledCatalogSelector(object):
         else:
             self.load_button_enabled = False
 
+    def on_rows_per_page_changed(self, index):
+        self._rows_per_page_index = index
+        self._current_page = 0
+        self.table_changed.emit(self.node_path_parts)
+
+    def on_first_page_clicked(self):
+        self._current_page = 0
+        self.table_changed.emit(self.node_path_parts)
+
     def on_prev_page_clicked(self):
         if self._current_page != 0:
             self._current_page -= 1
             self.table_changed.emit(self.node_path_parts)
 
     def on_next_page_clicked(self):
-        rows_per_page = self._rows_per_page_options[self._rows_per_page_index]
+        rows_per_page = self.rows_per_page
         if (
             self._current_page * rows_per_page
         ) + rows_per_page < len(self.get_current_node()):
             self._current_page += 1
             self.table_changed.emit(self.node_path_parts)
+
+    def on_last_page_clicked(self):
+        # NOTE: math.ceil gives the wrong answer for really large numbers
+        # Solution 4 in this answer: https://stackoverflow.com/a/54585138
+        self._current_page = ceil(len(self.get_current_node()) / self.rows_per_page) - 1
+        self.table_changed.emit(self.node_path_parts)
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""

@@ -92,8 +92,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.rows_per_page_selector = QComboBox()
 
         self.current_location_label = QLabel()
+        self.first_page = ClickableQLabel("<<")
         self.previous_page = ClickableQLabel("<")
         self.next_page = ClickableQLabel(">")
+        self.last_page = ClickableQLabel(">>")
         self.navigation_widget = QWidget()
 
         # Navigation layout
@@ -101,8 +103,10 @@ class QTiledCatalogSelectorDialog(QDialog):
         navigation_layout.addWidget(self.rows_per_page_label)
         navigation_layout.addWidget(self.rows_per_page_selector)
         navigation_layout.addWidget(self.current_location_label)
+        navigation_layout.addWidget(self.first_page)
         navigation_layout.addWidget(self.previous_page)
         navigation_layout.addWidget(self.next_page)
+        navigation_layout.addWidget(self.last_page)
         self.navigation_widget.setLayout(navigation_layout)
 
         # Current path layout
@@ -218,6 +222,15 @@ class QTiledCatalogSelectorDialog(QDialog):
         )
         self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
 
+    def _set_current_location_label(self):
+        starting_index = self.model._current_page * self.model.rows_per_page + 1
+        ending_index = min(
+            self.model.rows_per_page * (self.model._current_page + 1),
+            len(self.model.get_current_node()),
+        )
+        current_location_text = f"{starting_index}-{ending_index} of {len(self.model.get_current_node())}"
+        self.current_location_label.setText(current_location_text)
+
     def populate_table(self):
         original_state = {}
         # TODO: may need if condition if we implement a disconnect button
@@ -235,7 +248,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
 
         # Then add new rows
-        rows_per_page = self.model._rows_per_page_options[self.model._rows_per_page_index]
+        rows_per_page = self.model.rows_per_page
         for _ in range(rows_per_page):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
@@ -337,8 +350,12 @@ class QTiledCatalogSelectorDialog(QDialog):
         @self.model.table_changed.connect
         def on_table_changed(node_path_parts: Tuple[str]):
             _logger.debug(f"on_table_changed(): {node_path_parts = }")
+            if self.model.client is None:
+                # TODO: handle disconnecting from tiled client later
+                return
             self.populate_table()
             self._rebuild_current_path_layout()
+            self._set_current_location_label()
 
         @self.model.url_validation_error.connect
         def on_url_validation_error(error_msg: str):
@@ -356,8 +373,11 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.url_entry.textEdited.connect(model.on_url_text_edited)
         self.url_entry.editingFinished.connect(model.on_url_editing_finished)
         self.connect_button.clicked.connect(model.on_connect_clicked)
+        self.first_page.clicked.connect(model.on_first_page_clicked)
         self.next_page.clicked.connect(model.on_next_page_clicked)
         self.previous_page.clicked.connect(model.on_prev_page_clicked)
+        self.last_page.clicked.connect(model.on_last_page_clicked)
+        self.rows_per_page_selector.currentIndexChanged.connect(self.model.on_rows_per_page_changed)
 
     def connect_self_signals(self):
         # TODO find another way to do this?
