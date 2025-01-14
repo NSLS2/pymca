@@ -137,8 +137,6 @@ def test_navigation(
     for row_num, text in enumerate(expected_text):
         assert dialog.catalog_table.item(row_num, 0).text() == text
 
-    dialog.model.on_next_page_clicked()
-
     # Check last values show in last page
     dialog.model.on_last_page_clicked()
 
