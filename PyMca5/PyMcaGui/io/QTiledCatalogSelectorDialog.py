@@ -136,14 +136,14 @@ class QTiledCatalogSelectorDialog(QDialog):
         # Info layout
         self.info_box = QTextEdit()
         self.info_box.setReadOnly(True)
-        self.load_button = QPushButton("Open")
-        self.load_button.setEnabled(False)
-        # self.load_button.clicked.connect(self._on_load)
+        self.open_button = QPushButton("Open")
+        self.open_button.setEnabled(False)
+        # self.open_button.clicked.connect(self._on_load)
         catalog_info_layout = QHBoxLayout()
         catalog_info_layout.addWidget(self.catalog_table)
         load_layout = QVBoxLayout()
         load_layout.addWidget(self.info_box)
-        load_layout.addWidget(self.load_button)
+        load_layout.addWidget(self.open_button)
         catalog_info_layout.addLayout(load_layout)
 
         # Catalog table layout
@@ -298,7 +298,7 @@ class QTiledCatalogSelectorDialog(QDialog):
 
     def _clear_metadata(self):
         self.info_box.setText("")
-        self.load_button.setEnabled(False)
+        self.open_button.setEnabled(False)
 
     def _on_item_selected(self):
         model = self.model
@@ -312,7 +312,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         model.on_item_selected(child_node_path)
 
         self.info_box.setText(model.info_text)
-        self.load_button.setEnabled(model.load_button_enabled)
+        self.open_button.setEnabled(model.open_button_enabled)
 
     def _on_item_double_click(self, item):
         if item is self.catalog_breadcrumbs:
@@ -321,13 +321,12 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.model.open_node(item.text())
 
     def _on_load(self):
+        # This is now for selecting a catalog
         selected = self.catalog_table.selectedItems()
         if not selected:
             return
         item = selected[0]
-        if item is self.catalog_breadcrumbs:
-            return
-        self.model.open_node(item.text())
+        self.model.open_catalog(item.text())
 
     def _on_breadcrumb_clicked(self, node_index):
         self.model.jump_to_node(node_index)
@@ -385,7 +384,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         self.catalog_table.itemDoubleClicked.connect(
             self._on_item_double_click
         )
-        self.load_button.clicked.connect(self._on_load)
+        self.open_button.clicked.connect(self._on_load)
 
 
 class ClickableQLabel(QLabel):
