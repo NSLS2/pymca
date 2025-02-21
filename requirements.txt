@@ -6,12 +6,14 @@
 --find-links http://www.silx.org/pub/wheelhouse/
 --only-binary numpy,h5py,PyQt5,PySide2
 
-numpy >= 1.8
+numpy >= 1.8,<=2.0
 fisx >= 1.1.6
 PyOpenGL                  # For PyMca5.Object3D module 
 h5py                      # For HDF5 file format support
 matplotlib > 1.0          # For visualization
 qtconsole                 # For interactive console plugin
+tiled[client]
+bluesky-tiled-plugins
 
 # PyQt5 or PySide2 or PySide6  # For PyMca5.PyMcaGui
 # Try to install a Qt binding from a wheel
