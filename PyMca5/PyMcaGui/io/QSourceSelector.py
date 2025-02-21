@@ -38,6 +38,7 @@ from PyMca5.PyMcaGui.plotting import PyMca_Icons as icons
 from PyMca5.PyMcaIO import spswrap as sps
 from PyMca5 import PyMcaDirs
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
+from PyMca5.PyMcaGui.io.QTiledWidget import QTiledWidget
 
 BLISS = False
 if sys.version_info > (3, 5):
@@ -86,6 +87,7 @@ class QSourceSelector(qt.QWidget):
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["bliss"]))
         else:
             self.specIcon   = qt.QIcon(qt.QPixmap(icons.IconDict["spec"]))
+        self.blueskyIcon = qt.QIcon(qt.QPixmap(icons.IconDict["bluesky"]))
 
         openButton.setIcon(self.openIcon)
         openButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
@@ -105,14 +107,20 @@ class QSourceSelector(qt.QWidget):
             specButton.setToolTip("Open data acquisition source")
         else:
             specButton.setToolTip("Open new shared memory source")
+        blueskyButton = qt.QPushButton(self.fileWidget)
+        blueskyButton.setIcon(self.blueskyIcon)
+        blueskyButton.setToolTip("Open Tiled Bluesky catalog browser")
 
         closeButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
         specButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
+        blueskyButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
         refreshButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
 
         openButton.clicked.connect(self._openFileSlot)
         closeButton.clicked.connect(self.closeFile)
         refreshButton.clicked.connect(self._reload)
+
+        blueskyButton.clicked.connect(self.tiledConnection)
 
         specButton.clicked.connect(self.openBlissOrSpec)
         if hasattr(self.fileCombo, "textActivated"):
@@ -125,6 +133,7 @@ class QSourceSelector(qt.QWidget):
         fileWidgetLayout.addWidget(openButton)
         fileWidgetLayout.addWidget(closeButton)
         fileWidgetLayout.addWidget(specButton)
+        fileWidgetLayout.addWidget(blueskyButton)
         if sys.platform == "win32":specButton.hide()
         fileWidgetLayout.addWidget(refreshButton)
         self.specButton = specButton
@@ -135,6 +144,23 @@ class QSourceSelector(qt.QWidget):
             self.pluginsButton.setSizePolicy(qt.QSizePolicy(qt.QSizePolicy.Fixed, qt.QSizePolicy.Minimum))
             fileWidgetLayout.addWidget(self.pluginsButton)
         self.mainLayout.addWidget(self.fileWidget)
+
+    def tiledConnection(self):
+        self.tiledDialog = QTiledWidget()
+        self.tiledDialog.show_dialog()
+        # print(f"{self.tiledDialog.model.selected_catalog_path = }")
+        current_catalog = self.tiledDialog.model.client[*self.tiledDialog.model.selected_catalog_path]
+        print(f"{current_catalog = }")
+        print(f"{current_catalog.uri = }")
+        # url = "https://tiled-demo.blueskyproject.io/api"
+        # ddict = {
+        #     "event": "NewSourceSelected",
+        #     "sourcelist": url,
+        # }
+        # # pass info from dialog through
+        # self.sigSourceSelectorSignal.emit(ddict)
+
+        # # Potentially add a authorization window when clicked
 
     def _reload(self):
         _logger.debug("_reload called")

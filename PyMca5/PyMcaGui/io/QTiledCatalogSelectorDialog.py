@@ -327,6 +327,7 @@ class QTiledCatalogSelectorDialog(QDialog):
             return
         item = selected[0]
         self.model.open_catalog(item.text())
+        self.accept()
 
     def _on_breadcrumb_clicked(self, node_index):
         self.model.jump_to_node(node_index)
