@@ -11,6 +11,7 @@ from tiled.structures.core import StructureFamily
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
+from PyMca5.PyMcaGui.io.TiledDataChannelTable import QTiledDataChannelTable
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
 from PyMca5.PyMcaGui.io.QTiledCatalogSelectorDialog import (
     QTiledCatalogSelectorDialog, ClickableQLabel, ClickableIndexedQLabel
@@ -117,18 +118,45 @@ class QTiledWidget(QWidget):
         self.catalog_table_widget.setLayout(catalog_table_layout)
         self.catalog_table_widget.setVisible(False)
 
+        # Data Channels Table
+        self.data_channels_table = QTiledDataChannelTable()
+        self.data_channels_table.setVisible(False)
+
+        # Command Button Elements
+        self.command_button_widget = QWidget()
+        self.command_button_widget.setSizePolicy(qt.QSizePolicy.Minimum,
+                                   qt.QSizePolicy.Minimum)
+        add_button = qt.QPushButton("ADD", self.command_button_widget)
+        remove_button = qt.QPushButton("REMOVE", self.command_button_widget)
+        replace_button = qt.QPushButton("REPLACE", self.command_button_widget)
+
+        # Command Buttons Layout
+        command_button_layout = qt.QHBoxLayout(self.command_button_widget)
+        command_button_layout.addWidget(add_button)
+        command_button_layout.addWidget(remove_button)
+        command_button_layout.addWidget(replace_button)
+        command_button_layout.setContentsMargins(5, 5, 5, 5)
+        self.command_button_widget.setVisible(False)
+
+        data_channel_layout = QVBoxLayout()
+        data_channel_layout.addWidget(self.data_channels_table)
+        data_channel_layout.addWidget(self.command_button_widget)
+        
+        self.data_channel_widget = QWidget()
+        self.data_channel_widget.setLayout(data_channel_layout)
+
         self.splitter = QSplitter(self)
         self.splitter.setOrientation(Qt.Orientation.Vertical)
 
         self.splitter.addWidget(self.connection_label)
         self.splitter.addWidget(self.catalog_table_widget)
+        self.splitter.addWidget(self.data_channel_widget)
 
-        self.splitter.setStretchFactor(1, 2)
+        self.splitter.setStretchFactor(2, 2)
 
         layout = QVBoxLayout()
         layout.addWidget(self.select_tiled_catalog)
         layout.addWidget(self.connection_label)
-        layout.addStretch()
         layout.addWidget(self.splitter)
         self.setLayout(layout)
 
@@ -186,10 +214,13 @@ class QTiledWidget(QWidget):
         current_location_text = f"{starting_index}-{ending_index} of {len(self.model.get_current_node())}"
         self.current_location_label.setText(current_location_text)
 
-    def populate_table(self):
+    def populate_run_table(self):
         original_state = {}
         # TODO: may need if condition if we implement a disconnect button
         self.catalog_table_widget.setVisible(True)
+        self.data_channels_table.setVisible(True)
+        self.data_channels_table.format_table()
+        self.command_button_widget.setVisible(True)
 
         original_state["blockSignals"] = self.catalog_table.blockSignals(True)
         # Remove all rows first
@@ -251,6 +282,76 @@ class QTiledWidget(QWidget):
         self._clear_metadata()
         self.catalog_table.blockSignals(original_state["blockSignals"])
 
+    # def populate_data_channel_table(self):
+    #     original_state = {}
+
+    #     original_state["blockSignals"] = self.catalog_table.blockSignals(True)
+    #     # Remove all rows first
+    #     while self.catalog_table.rowCount() > 0:
+    #         self.catalog_table.removeRow(0)
+
+    #     if self.model.node_path_parts:
+    #         # add breadcrumbs
+    #         self.catalog_breadcrumbs = QTableWidgetItem("..")
+    #         self.catalog_table.insertRow(0)
+    #         self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
+
+    #     # Then add new rows
+    #     rows_per_page = self.model.rows_per_page
+    #     for _ in range(rows_per_page):
+    #         last_row_position = self.catalog_table.rowCount()
+    #         self.catalog_table.insertRow(last_row_position)
+    #     node_offset = rows_per_page * self.model._current_page
+    #     # Fetch a page of keys.
+    #     items = self.model.get_current_node().items()[
+    #         node_offset : node_offset + rows_per_page
+    #     ]
+    #     # Loop over rows, filling in keys until we run out of keys.
+    #     start = 1 if self.model.node_path_parts else 0
+    #     for row_index, (key, value) in zip(
+    #         range(start, self.catalog_table.rowCount()), items
+    #     ):
+    #         family = value.item["attributes"]["structure_family"]
+
+    #         if family == StructureFamily.container:
+    #             icon = self.style().standardIcon(QStyle.SP_DirHomeIcon)
+    #         elif family == StructureFamily.array:
+    #             icon = self.style().standardIcon(
+    #                 QStyle.SP_FileIcon
+    #             )
+    #         else:
+    #             icon = self.style().standardIcon(
+    #                 QStyle.SP_TitleBarContextHelpButton
+    #             )
+
+    #         self.catalog_table.setItem(
+    #             row_index, 0, QTableWidgetItem(icon, key)
+    #         )
+
+    #     # remove extra rows
+    #     for _ in range(rows_per_page - len(items)):
+    #         self.catalog_table.removeRow(self.catalog_table.rowCount() - 1)
+
+    #     headers = [
+    #         str(x + 1)
+    #         for x in range(
+    #             node_offset, node_offset + self.catalog_table.rowCount()
+    #         )
+    #     ]
+    #     if self.model.node_path_parts:
+    #         headers = [""] + headers
+
+    #     self.catalog_table.setVerticalHeaderLabels(headers)
+    #     self._clear_metadata()
+    #     self.catalog_table.blockSignals(original_state["blockSignals"])
+
+    def populate_data_channel_table(self, child_node):
+        # For now, always select data from the primary stream
+        channel_list = self.model.client[child_node]["primary", "data"].keys()
+        
+        self.data_channels_table.clear_table()
+        self.data_channels_table.build_table(channel_list)
+
     def _clear_metadata(self):
         self.info_box.setText("")
         self.open_button.setEnabled(False)
@@ -267,21 +368,22 @@ class QTiledWidget(QWidget):
         model.on_item_selected(child_node_path)
 
         self.info_box.setText(model.info_text)
-        # self.open_button.setEnabled(model.open_button_enabled)
+        self.open_button.setEnabled(model.open_button_enabled)
 
     def _on_item_double_click(self, item):
         if item is self.catalog_breadcrumbs:
             self.model.exit_node()
             return
         self.model.open_node(item.text())
+        self.open_button.setEnabled(False)
 
     def _on_load(self):
-        # This is now for selecting a catalog
         selected = self.catalog_table.selectedItems()
         if not selected:
             return
         item = selected[0]
-        self.model.open_catalog(item.text())
+        self.model.open_run(item.text())
+        self.populate_data_channel_table(item.text())
 
     def _on_breadcrumb_clicked(self, node_index):
         self.model.jump_to_node(node_index)
@@ -322,7 +424,7 @@ class QTiledWidget(QWidget):
             if self.model.client is None:
                 # TODO: handle disconnecting from tiled client later
                 return
-            self.populate_table()
+            self.populate_run_table()
             self._rebuild_current_path_layout()
             self._set_current_location_label()
 
@@ -348,3 +450,9 @@ class QTiledWidget(QWidget):
             self._on_item_double_click
         )
         self.open_button.clicked.connect(self._on_load)
+
+
+# # Command Buttons Connections
+# addButton.clicked.connect(self._addClicked)
+# replaceButton.clicked.connect(self._replaceClicked)
+# removeButton.clicked.connect(self._removeClicked)

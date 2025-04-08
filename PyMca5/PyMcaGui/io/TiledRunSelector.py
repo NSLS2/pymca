@@ -83,7 +83,7 @@ class TiledRunSelector(object):
         else:
             self._rows_per_page_options = rows_per_page_options
         self._rows_per_page_index = 0
-        self.selected_catalog_path = ()
+        self.selected_run_path = ()
 
     @property
     def url(self) -> str:
@@ -163,12 +163,9 @@ class TiledRunSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node = self.get_node(node_path_parts)
+        node = self.get_node(node_path_parts)[0]
 
-        if self.is_catalog_of_bluesky_runs(node):
-            self.open_button_enabled = True
-        else:
-            self.open_button_enabled = False
+        self.open_button_enabled = True
 
         attrs = node.item["attributes"]        
         family = attrs["structure_family"]
@@ -181,8 +178,8 @@ class TiledRunSelector(object):
         info += f"<b>metadata:</b> {metadata}"
         self.info_text = info
     
-    def open_catalog(self, child_node_path):
-        self.selected_catalog_path = self.node_path_parts + (child_node_path,)
+    def open_run(self, child_node_path):
+        self.selected_run_path = self.node_path_parts + (child_node_path,)
 
     def on_rows_per_page_changed(self, index):
         self._rows_per_page_index = index

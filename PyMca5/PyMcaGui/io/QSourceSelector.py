@@ -146,11 +146,15 @@ class QSourceSelector(qt.QWidget):
         self.mainLayout.addWidget(self.fileWidget)
 
     def tiledConnection(self):
-        self.tiledDialog = QTiledWidget()
-        self.tiledDialog.show_dialog()
-        # print(f"{self.tiledDialog.model.selected_catalog_path = }")
-        current_catalog = self.tiledDialog.model.client[*self.tiledDialog.model.selected_catalog_path]
-        print(f"{current_catalog = }")
+        # FIXME: pressing the bluesky button should switch tabs and populate run selector
+        # table and data channels table
+        self.tiledWidget = QTiledWidget()
+        self.tiledWidget.show_dialog()
+        print(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")
+        self.tiledWidget.model.table_changed.emit(self.tiledWidget.dialog.model.node_path_parts)
+
+        current_catalog = self.tiledWidget.dialog.model.client[*self.tiledWidget.dialog.model.selected_catalog_path]
+        print(f"@@@ {current_catalog = }")
         print(f"{current_catalog.uri = }")
         # url = "https://tiled-demo.blueskyproject.io/api"
         # ddict = {
