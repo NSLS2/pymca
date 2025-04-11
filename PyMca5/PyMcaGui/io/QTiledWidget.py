@@ -11,7 +11,7 @@ from tiled.structures.core import StructureFamily
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
-from PyMca5.PyMcaGui.io.TiledDataChannelTable import QTiledDataChannelTable
+from PyMca5.PyMcaGui.io.QTiledDataChannelTable import QTiledDataChannelTable
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
 from PyMca5.PyMcaGui.io.QTiledCatalogSelectorDialog import (
     QTiledCatalogSelectorDialog, ClickableQLabel, ClickableIndexedQLabel

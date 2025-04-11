@@ -171,6 +171,7 @@ class TiledRunSelector(object):
         family = attrs["structure_family"]
         metadata = json.dumps(attrs["metadata"], indent=2, default=json_decode)
 
+        # TODO: this metadata is hard to read in the info box
         info = f"<b>type:</b> {family}<br>"
         if family == StructureFamily.array:
             shape = attrs["structure"]["shape"]
