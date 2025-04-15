@@ -282,69 +282,6 @@ class QTiledWidget(QWidget):
         self._clear_metadata()
         self.catalog_table.blockSignals(original_state["blockSignals"])
 
-    # def populate_data_channel_table(self):
-    #     original_state = {}
-
-    #     original_state["blockSignals"] = self.catalog_table.blockSignals(True)
-    #     # Remove all rows first
-    #     while self.catalog_table.rowCount() > 0:
-    #         self.catalog_table.removeRow(0)
-
-    #     if self.model.node_path_parts:
-    #         # add breadcrumbs
-    #         self.catalog_breadcrumbs = QTableWidgetItem("..")
-    #         self.catalog_table.insertRow(0)
-    #         self.catalog_table.setItem(0, 0, self.catalog_breadcrumbs)
-
-    #     # Then add new rows
-    #     rows_per_page = self.model.rows_per_page
-    #     for _ in range(rows_per_page):
-    #         last_row_position = self.catalog_table.rowCount()
-    #         self.catalog_table.insertRow(last_row_position)
-    #     node_offset = rows_per_page * self.model._current_page
-    #     # Fetch a page of keys.
-    #     items = self.model.get_current_node().items()[
-    #         node_offset : node_offset + rows_per_page
-    #     ]
-    #     # Loop over rows, filling in keys until we run out of keys.
-    #     start = 1 if self.model.node_path_parts else 0
-    #     for row_index, (key, value) in zip(
-    #         range(start, self.catalog_table.rowCount()), items
-    #     ):
-    #         family = value.item["attributes"]["structure_family"]
-
-    #         if family == StructureFamily.container:
-    #             icon = self.style().standardIcon(QStyle.SP_DirHomeIcon)
-    #         elif family == StructureFamily.array:
-    #             icon = self.style().standardIcon(
-    #                 QStyle.SP_FileIcon
-    #             )
-    #         else:
-    #             icon = self.style().standardIcon(
-    #                 QStyle.SP_TitleBarContextHelpButton
-    #             )
-
-    #         self.catalog_table.setItem(
-    #             row_index, 0, QTableWidgetItem(icon, key)
-    #         )
-
-    #     # remove extra rows
-    #     for _ in range(rows_per_page - len(items)):
-    #         self.catalog_table.removeRow(self.catalog_table.rowCount() - 1)
-
-    #     headers = [
-    #         str(x + 1)
-    #         for x in range(
-    #             node_offset, node_offset + self.catalog_table.rowCount()
-    #         )
-    #     ]
-    #     if self.model.node_path_parts:
-    #         headers = [""] + headers
-
-    #     self.catalog_table.setVerticalHeaderLabels(headers)
-    #     self._clear_metadata()
-    #     self.catalog_table.blockSignals(original_state["blockSignals"])
-
     def populate_data_channel_table(self, child_node):
         # For now, always select data from the primary stream
         channel_list = self.model.client[child_node]["primary", "data"].keys()
@@ -398,7 +335,7 @@ class QTiledWidget(QWidget):
 
         self.model.url = self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri
 
-        print(f"{self.model.url = }")
+        _logger.debug(f"{self.model.url = }")
 
         # print(f"{self.dialog.model.selected_catalog_path}")
         # print(f"{self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri}")
