@@ -52,14 +52,15 @@ if sys.platform == "win32":
 else:
     from PyMca5.PyMcaGui.pymca import QSpsDataSource
     sps = QSpsDataSource.SpsDataSource.sps
-    from PyMca5.PyMcaGui.io import QSpsWidget
+    from PyMca5.PyMcaGui.io import QSpsWidget, QTiledWidget
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource,
                      QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource}
 
     source_widgets = { SpecFileDataSource.SOURCE_TYPE: QSpecFileWidget.QSpecFileWidget,
                        EdfFileDataSource.SOURCE_TYPE: QEdfFileWidget.QEdfFileWidget,
-                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget}
+                       QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget,
+                       "Tiled": QTiledWidget.QTiledWidget}
 
 NEXUS = True
 try:

@@ -23,36 +23,32 @@ def json_decode(obj):
     return str(obj)
 
 
-class TiledCatalogSelectorSignals(QObject):
-    """Collection of signals for a TiledCatalogSelector model."""
+class TiledRunSelectorSignals(QObject):
+    """Collection of signals for a TiledRunSelector model."""
     client_connected = pyqtSignal(
         str, # new URL
         str, # new API URL
-        name="TiledCatalogSelector.client_connected",
+        name="TiledRunSelector.client_connected",
     )
     client_connection_error = pyqtSignal(
         str, # Error message
-        name="TiledCatalogSelector.client_connection_error",
+        name="TiledRunSelector.client_connection_error",
     )
     table_changed = pyqtSignal(
         tuple, # New node path parts, tuple of strings
-        name="TiledCatalogSelector.table_changed",
+        name="TiledRunSelector.table_changed",
     )
     url_changed = pyqtSignal(
         name="TiledCatalogSelector.url_changed",
-    )
-    url_validation_error = pyqtSignal(
-        str, # Error message
-        name="TiledCatalogSelector.url_validation_error",
     )
     
     def __init__(self, parent: Optional[QObject] = None) -> None:
         super().__init__(parent)
 
 
-class TiledCatalogSelector(object):
+class TiledRunSelector(object):
     """View Model for selecting a Tiled CatalogOfBlueskyRuns."""
-    Signals = TiledCatalogSelectorSignals
+    Signals = TiledRunSelectorSignals
     SUPPORTED_TYPES = (StructureFamily.array, StructureFamily.container)
 
     def __init__(
@@ -66,7 +62,7 @@ class TiledCatalogSelector(object):
         *args,
         **kwargs,
     ):
-        _logger.debug("TiledCatalogSelector.__init__()...")
+        _logger.debug("TiledRunSelector.__init__()...")
 
         self._url = url
         self._client = client
@@ -79,10 +75,6 @@ class TiledCatalogSelector(object):
         self.client_connection_error = self.signals.client_connection_error
         self.table_changed = self.signals.table_changed
         self.url_changed = self.signals.url_changed
-        self.url_validation_error = self.signals.url_validation_error
-
-        # A buffer to receive updates while the URL is being edited
-        self._url_buffer = self.url
 
         self.node_path_parts = ()
         self._current_page = 0
@@ -91,7 +83,7 @@ class TiledCatalogSelector(object):
         else:
             self._rows_per_page_options = rows_per_page_options
         self._rows_per_page_index = 0
-        self.selected_catalog_path = ()
+        self.selected_run_path = ()
 
     @property
     def url(self) -> str:
@@ -100,13 +92,12 @@ class TiledCatalogSelector(object):
     
     @url.setter
     def url(self, value: str):
-        """Updates the URL (and buffer) for accessing tiled server data.
+        """Updates the URL for accessing tiled server data.
         
             Emits the 'url_changed' signal.
         """
         old_value = self._url
         self._url = value
-        self._url_buffer = value
         if value != old_value:
             self.url_changed.emit()
 
@@ -150,32 +141,9 @@ class TiledCatalogSelector(object):
         if self.client is not None:
             self.table_changed.emit(self.node_path_parts)
 
-    def on_url_text_edited(self, new_text: str):
-        """Handle a notification that the URL is being edited."""
-        _logger.debug("TiledCatalogSelector.on_url_text_edited()...")
-
-        self._url_buffer = new_text
-
-    def on_url_editing_finished(self):
-        """Handle a notification that URL editing is complete."""
-        _logger.debug("TiledCatalogSelector.on_url_editing_finished()...")
-
-        new_url = self._url_buffer.strip()
-
-        try:
-            for validate in self.validators["url"]:
-                validate(new_url)
-        except ValueError as exception:
-            error_message = str(exception)
-            _logger.error(error_message)
-            self.url_validation_error.emit(error_message)
-            return
-        
-        self.url = new_url
-
-    def on_connect_clicked(self, checked: bool = False):
+    def on_url_changed(self, checked: bool = False):
         """Handle a button click to connect to the Tiled client."""
-        _logger.debug("TiledCatalogSelector.on_connect_clicked()...")
+        _logger.debug("TiledRunSelector.on_connect_clicked()...")
 
         if self.client:
             # TODO: Clean-up previously connected client?
@@ -195,17 +163,15 @@ class TiledCatalogSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node = self.get_node(node_path_parts)
+        node = self.get_node(node_path_parts)[0]
 
-        if self.is_catalog_of_bluesky_runs(node):
-            self.open_button_enabled = True
-        else:
-            self.open_button_enabled = False
+        self.open_button_enabled = True
 
         attrs = node.item["attributes"]        
         family = attrs["structure_family"]
         metadata = json.dumps(attrs["metadata"], indent=2, default=json_decode)
 
+        # TODO: this metadata is hard to read in the info box
         info = f"<b>type:</b> {family}<br>"
         if family == StructureFamily.array:
             shape = attrs["structure"]["shape"]
@@ -213,8 +179,8 @@ class TiledCatalogSelector(object):
         info += f"<b>metadata:</b> {metadata}"
         self.info_text = info
     
-    def open_catalog(self, child_node_path):
-        self.selected_catalog_path = self.node_path_parts + (child_node_path,)
+    def open_run(self, child_node_path):
+        self.selected_run_path = self.node_path_parts + (child_node_path,)
 
     def on_rows_per_page_changed(self, index):
         self._rows_per_page_index = index
@@ -301,48 +267,6 @@ class TiledCatalogSelector(object):
     @staticmethod
     def client_from_url(url: str):
         """Create a Tiled client that is connected to the requested URL."""
-        _logger.debug("TiledCatalogSelector.client_from_url()...")
+        _logger.debug("TiledRunSelector.client_from_url()...")
 
         return from_uri(url)
-
-
-def urlparse(url: str) -> ParseResult:
-    """Re-raise URL parsing errors with an extra custom message."""
-    try:
-        url_parts = _urlparse(url)
-    except ValueError as exception:
-        raise ValueError(f'{url} is not a valid URL.') from exception
-    
-    if not url_parts.scheme:
-        raise ValueError(
-            f'{url} is not a valid URL. URL must include a scheme.'
-        )
-    
-    if not url_parts.netloc:
-        raise ValueError(
-            f'{url} is not a valid URL. URL must include a network location.'
-        )
-    
-    return url_parts
-
-
-def validate_url_syntax(url: str) -> None:
-    """Verify that input string is parseable as a URL."""
-    urlparse(url)
-
-
-def validate_url_scheme(
-    url: str,
-    valid_schemes: Sequence[str] = ("http", "https"),
-) -> None:
-    """Verify that URL scheme is one of 'valid_schemes'."""
-    url_parts = urlparse(url)
-    
-    if url_parts.scheme not in valid_schemes:
-        error_message = " ".join((
-            f'{url} is not a valid Tiled URL.',
-            "URL must start with",
-            " or ".join(valid_schemes),
-            "."
-        ))
-        raise ValueError(error_message)
