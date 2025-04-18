@@ -1,5 +1,7 @@
 import enable_pymca_import  # noqa: F401
 
+from unittest.mock import Mock, call, patch
+
 from pytestqt.qtbot import QtBot
 from tiled.client.base import BaseClient
 
@@ -18,19 +20,23 @@ def test_selected_items_in_data_channel_table(qtbot: QtBot):
     data_channel_table.clear_table()
     data_channel_table.build_table(channel_list)
 
-    # Mark items as checked
-    for i in range(data_channel_table.rowCount()):
-        widget = data_channel_table.cellWidget(i, i + 1)
-        widget.setChecked(True)
+    with patch.object(data_channel_table, "sigTiledDataChannelTableSignal") as mock_signal:
+        mock_signal.emit = Mock()
 
-    # FIXME: failing test, x(y/mon)Selection not being set yet
+        # Mark items as checked
+        for i in range(data_channel_table.rowCount()):
+            widget = data_channel_table.cellWidget(i, i + 1)
+            widget.setChecked(True)
+            data_channel_table._mySlot({"row": i, "col": i + 1, "state": True})
 
-    # Check items marked as checked in QTiledDataChannelTable
-    assert data_channel_table.xSelection == ["a"]
-    assert data_channel_table.ySelection == ["b"]
-    assert data_channel_table.monSelection == ["c"]
+            # sigTiledDataChannelTableSignal should be emitted once every time
+            # we call _mySlot
+            assert mock_signal.emit.call_count == i + 1
 
-    # sigTiledDataChannelTableSignal emitted here
+        # Check items marked as checked in QTiledDataChannelTable
+        assert data_channel_table.xSelection == [0]
+        assert data_channel_table.ySelection == [1]
+        assert data_channel_table.monSelection == [2]
 
 
 def test_add_button_gets_plottable_data(qtbot: QtBot):
