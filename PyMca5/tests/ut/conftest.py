@@ -11,6 +11,7 @@ from tiled.adapters.array import ArrayAdapter
 from tiled.adapters.mapping import MapAdapter
 
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
+from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
 
 
 tree = MapAdapter(
@@ -76,4 +77,11 @@ def dialog_model(qapp: QApplication):
 def tiled_client_dialog_model(qapp: QApplication, tiled_client: BaseClient):
     """TiledCatalogSelector that is compatible with QtBot-based tests."""
     model = TiledCatalogSelector(parent=qapp, client=tiled_client)
+    yield model
+
+
+@pytest.fixture
+def tiled_client_run_selector_model(qapp: QApplication, tiled_client: BaseClient):
+    """TiledCatalogSelector that is compatible with QtBot-based tests."""
+    model = TiledRunSelector(parent=qapp, client=tiled_client)
     yield model

@@ -3,9 +3,10 @@ import enable_pymca_import  # noqa: F401
 from unittest.mock import Mock, call, patch
 
 from pytestqt.qtbot import QtBot
-from tiled.client.base import BaseClient
 
+from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
 from PyMca5.PyMcaGui.io.QTiledDataChannelTable import QTiledDataChannelTable
+from PyMca5.PyMcaGui.io.QTiledWidget import QTiledWidget
 
 
 def test_selected_items_in_data_channel_table(qtbot: QtBot):
@@ -25,12 +26,13 @@ def test_selected_items_in_data_channel_table(qtbot: QtBot):
 
         # Mark items as checked
         for i in range(data_channel_table.rowCount()):
+            # The 0 column is the name of the channel
             widget = data_channel_table.cellWidget(i, i + 1)
-            widget.setChecked(True)
-            data_channel_table._mySlot({"row": i, "col": i + 1, "state": True})
+            # User clicks the checkbox, which is a CheckBoxItem
+            widget.click()
 
             # sigTiledDataChannelTableSignal should be emitted once every time
-            # we call _mySlot
+            # we click a checkbox
             assert mock_signal.emit.call_count == i + 1
 
         # Check items marked as checked in QTiledDataChannelTable
@@ -39,27 +41,50 @@ def test_selected_items_in_data_channel_table(qtbot: QtBot):
         assert data_channel_table.monSelection == [2]
 
 
-def test_add_button_gets_plottable_data(qtbot: QtBot):
+def test_add_button_gets_plottable_data(
+        qtbot: QtBot,
+        tiled_client_run_selector_model: TiledRunSelector
+):
     """Add button gets data that can be plotted."""
+    widget = QTiledWidget(model=tiled_client_run_selector_model)
+    widget.show()
+    qtbot.addWidget(widget)
+
     # Create data channel table
+    widget.data_channel_table.setVisible(True)
+    widget.data_channel_table.format_table()
+    widget.command_button_widget.setVisible(True)
+
+    channel_list = ["a", "b", "c"]
+
+    widget.data_channel_table.clear_table()
+    widget.data_channel_table.build_table(channel_list)
 
     # Mark items as checked
+    for i in range(widget.data_channel_table.rowCount()):
+        cell_widget = widget.data_channel_table.cellWidget(i, i + 1)
+        cell_widget.click()
 
     # Click ADD
+    widget.add_button.click()  # TODO: this is not connected to anything yet
+    # TODO: Maybe here we can just set the x(y/mon)Selection lists instead
+    # of creating the entire QTiledWidget
 
     # data channel table should getChannelSelection
 
     # Check that data is coming out in a way that can be plotted
     # i.e. data_names, x_selection, y_selection, m_selection
-    # Check that items appear in selected items in model
-    # assert model.
-    # ddict = {
-    #         "Data Channel List": self.dataChannelList[:],
-    #         'x': self.xSelection[:],
-    #         'y' : self.ySelection[:],
-    #         'm' : self.monSelection[:],
-    #     }
 
     # Check sigAddSelection emitted with list of:
-    # 'SourceName', 'SourceType', 'selection', 'scanselection'
+    # {
+    #     'SourceName': self.data.sourceName,
+    #     'SourceType': self.data.sourceType,
+    #     'Key': self.node_path,
+    #     'legend': '/'.join(self.node_path),
+    #     'selection': {'x': channel_sel['x'],
+    #                     'y': channel_sel['y'],
+    #                     'm': channel_sel['m'],
+    #                     'Channel List': channel_sel['Data Channel List']},
+    #     'scanselection': True,
+    # }
     ...

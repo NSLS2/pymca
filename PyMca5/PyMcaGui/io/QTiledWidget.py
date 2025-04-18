@@ -119,27 +119,27 @@ class QTiledWidget(QWidget):
         self.catalog_table_widget.setVisible(False)
 
         # Data Channels Table
-        self.data_channels_table = QTiledDataChannelTable()
-        self.data_channels_table.setVisible(False)
+        self.data_channel_table = QTiledDataChannelTable()
+        self.data_channel_table.setVisible(False)
 
         # Command Button Elements
         self.command_button_widget = QWidget()
         self.command_button_widget.setSizePolicy(qt.QSizePolicy.Minimum,
                                    qt.QSizePolicy.Minimum)
-        add_button = qt.QPushButton("ADD", self.command_button_widget)
-        remove_button = qt.QPushButton("REMOVE", self.command_button_widget)
-        replace_button = qt.QPushButton("REPLACE", self.command_button_widget)
+        self.add_button = qt.QPushButton("ADD", self.command_button_widget)
+        self.remove_button = qt.QPushButton("REMOVE", self.command_button_widget)
+        self.replace_button = qt.QPushButton("REPLACE", self.command_button_widget)
 
         # Command Buttons Layout
         command_button_layout = qt.QHBoxLayout(self.command_button_widget)
-        command_button_layout.addWidget(add_button)
-        command_button_layout.addWidget(remove_button)
-        command_button_layout.addWidget(replace_button)
+        command_button_layout.addWidget(self.add_button)
+        command_button_layout.addWidget(self.remove_button)
+        command_button_layout.addWidget(self.replace_button)
         command_button_layout.setContentsMargins(5, 5, 5, 5)
         self.command_button_widget.setVisible(False)
 
         data_channel_layout = QVBoxLayout()
-        data_channel_layout.addWidget(self.data_channels_table)
+        data_channel_layout.addWidget(self.data_channel_table)
         data_channel_layout.addWidget(self.command_button_widget)
         
         self.data_channel_widget = QWidget()
@@ -218,8 +218,8 @@ class QTiledWidget(QWidget):
         original_state = {}
         # TODO: may need if condition if we implement a disconnect button
         self.catalog_table_widget.setVisible(True)
-        self.data_channels_table.setVisible(True)
-        self.data_channels_table.format_table()
+        self.data_channel_table.setVisible(True)
+        self.data_channel_table.format_table()
         self.command_button_widget.setVisible(True)
 
         original_state["blockSignals"] = self.catalog_table.blockSignals(True)
@@ -286,8 +286,8 @@ class QTiledWidget(QWidget):
         # For now, always select data from the primary stream
         channel_list = self.model.client[child_node]["primary", "data"].keys()
         
-        self.data_channels_table.clear_table()
-        self.data_channels_table.build_table(channel_list)
+        self.data_channel_table.clear_table()
+        self.data_channel_table.build_table(channel_list)
 
     def _clear_metadata(self):
         self.info_box.setText("")

@@ -96,6 +96,7 @@ class QTiledDataChannelTable(qt.QTableWidget):
             self.horizontalHeader().setSectionResizeMode(column, QtWidgets.QHeaderView.Stretch)
 
     def _mySlot(self, ddict):
+        print("*** in _mySlot")
         row = ddict["row"]
         col = ddict["col"]
         
