@@ -198,7 +198,7 @@ class QTiledWidget(QWidget):
 
     def reset_rows_per_page(self) -> None:
         """Reset the state of the rows_per_page_selector widget."""
-        _logger.debug("QTiledCatalogSelectorDialog.reset_rows_per_page()...")
+        _logger.debug("QTiledWidget.reset_rows_per_page()...")
 
         self.rows_per_page_selector.addItems(
             [str(option) for option in self.model._rows_per_page_options]
@@ -337,12 +337,73 @@ class QTiledWidget(QWidget):
 
         _logger.debug(f"{self.model.url = }")
 
-        # print(f"{self.dialog.model.selected_catalog_path}")
-        # print(f"{self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri}")
+    def setDataSource(self, source):
+        self.data = source
+        self.model.url = self.data.client.uri
+        _logger.debug(f'{type(self.data) = }; {self.data = }')
+        selection = self.set_data_source_key()
+
+        if selection is not None:
+            dataObject = self._getDataObject(selection=selection)
+            # self.graphWidget.setImageData(dataObject.data)
+            self.lastDataObject = dataObject
+
+    def set_data_source_key(self):
+        if self.model.node_path_parts:
+            self.selection = self.model.client[self.model.node_path_parts]
+        else:
+            self.selection = None
+        _logger.debug(f"QTiledWidget {self.selection = }")
+        return self.selection
+    
+    def _getDataObject(self, key=None, selection=None):
+        if key is None:
+            # key = self.info['Key']
+            _logger.debug('deal with later')
+        dataObject = self.data.getDataObject(key,
+                                             selection=None)
+        # if dataObject is not None:
+        #     dataObject.info['legend'] = self.info['Key']
+        #     dataObject.info['imageselection'] = False
+        #     dataObject.info['scanselection'] = False
+        #     dataObject.info['targetwidgetid'] = id(self)
+        #     self.data.addToPoller(dataObject)
+        return dataObject
+
+    def _on_add_clicked(self, *, emit=True):
+        """Add plot to ScanWindow."""
+        _logger.debug("QTiledWidget._on_add_clicked()...")
+        sel_list = []
+        channel_sel  = self.data_channel_table.getChannelSelection()
+        _logger.debug(f'{channel_sel = }')
+        _logger.debug(f'{self.model.node_path_parts = }')
+        if len(channel_sel['Data Channel List']):
+            if len(channel_sel['y']):
+                sel = {
+                    'SourceName': self.data.sourceName,
+                    'SourceType': self.data.sourceType,
+                    'Key': self.model.node_path_parts,
+                    'legend': '/'.join(self.model.node_path_parts),
+                    'selection': {'x': channel_sel['x'],
+                                  'y': channel_sel['y'],
+                                  'm': channel_sel['m'],
+                                  'Channel List': channel_sel['Data Channel List']},
+                    'scanselection': True,
+                    }
+                sel_list.append(sel)
+
+        _logger.debug(f'{sel_list = }')
+        _logger.debug(f'{emit = }')
+
+        if emit:
+            if len(sel_list):
+                self.sigAddSelection.emit(sel_list)
+            else:
+                return sel_list
 
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
-        _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
+        _logger.debug("QTiledWidget.connect_model_signals()...")
 
         @self.model.client_connected.connect
         def on_client_connected(url: str, api_url: str):
@@ -369,7 +430,7 @@ class QTiledWidget(QWidget):
 
     def connect_model_slots(self) -> None:
         """Connect model slots to dialog signals."""
-        _logger.debug("QTiledCatalogSelectorDialog.connect_model_slots()...")
+        _logger.debug("QTiledWidget.connect_model_slots()...")
 
         model = self.model
 
@@ -380,6 +441,7 @@ class QTiledWidget(QWidget):
         self.rows_per_page_selector.currentIndexChanged.connect(self.model.on_rows_per_page_changed)
 
     def connect_self_signals(self):
+        _logger.debug("QTiledWidget.connect_self_signals()...")
         # TODO find another way to do this?
         self.select_tiled_catalog.clicked.connect(self.show_dialog)
         self.catalog_table.itemSelectionChanged.connect(self._on_item_selected)
@@ -387,6 +449,7 @@ class QTiledWidget(QWidget):
             self._on_item_double_click
         )
         self.open_button.clicked.connect(self._on_load)
+        self.add_button.clicked.connect(self._on_add_clicked)
 
 
 # # Command Buttons Connections

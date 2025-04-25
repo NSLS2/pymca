@@ -157,12 +157,12 @@ class QSourceSelector(qt.QWidget):
         _logger.debug(f"@@@ {current_catalog = }")
         _logger.debug(f"{current_catalog.uri = }")
         # url = "https://tiled-demo.blueskyproject.io/api"
-        # ddict = {
-        #     "event": "NewSourceSelected",
-        #     "sourcelist": url,
-        # }
-        # # pass info from dialog through
-        # self.sigSourceSelectorSignal.emit(ddict)
+        ddict = {
+            "event": "NewSourceSelected",
+            "sourcelist": current_catalog.uri,
+        }
+        # pass info from dialog through
+        self.sigSourceSelectorSignal.emit(ddict)
 
         # # Potentially add a authorization window when clicked
 

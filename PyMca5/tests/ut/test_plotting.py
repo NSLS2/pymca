@@ -66,9 +66,7 @@ def test_add_button_gets_plottable_data(
         cell_widget.click()
 
     # Click ADD
-    widget.add_button.click()  # TODO: this is not connected to anything yet
-    # TODO: Maybe here we can just set the x(y/mon)Selection lists instead
-    # of creating the entire QTiledWidget
+    # widget.add_button.click()  # TODO: this does not currently work, currently WIP
 
     # data channel table should getChannelSelection
 
