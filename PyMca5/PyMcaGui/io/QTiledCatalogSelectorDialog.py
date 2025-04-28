@@ -2,11 +2,11 @@ import logging
 from collections import defaultdict
 from typing import Callable, Mapping, Optional, Tuple
 
-from PyQt5.QtCore import QEvent, QObject
+from PyQt5.QtCore import QEvent, QObject, QSize
 from PyQt5.QtWidgets import (
-    QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
-    QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem, QTextEdit,
-    QVBoxLayout, QWidget,
+    QAbstractItemView, QApplication, QComboBox, QDialog, QHBoxLayout, QLabel,
+    QLineEdit, QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem,
+    QTextEdit, QVBoxLayout, QWidget,
 )
 # TODO: test pyqtSignal vs Signal
 from qtpy.QtCore import Qt, Signal
@@ -171,6 +171,7 @@ class QTiledCatalogSelectorDialog(QDialog):
         """Initialize widget values."""
         self.reset_url_entry()
         self.reset_rows_per_page()
+        self.reset_size()
 
     def reset_url_entry(self) -> None:
         """Reset the state of the url_entry widget."""
@@ -221,6 +222,22 @@ class QTiledCatalogSelectorDialog(QDialog):
             [str(option) for option in self.model._rows_per_page_options]
         )
         self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
+
+    def reset_size(self) -> None:
+        """Set values related to dialog size."""
+        _logger.debug(f"{self.size() = }")
+        _logger.debug(f"{self.sizeHint() = }")
+        _logger.debug(f"{self.minimumSize() = }")
+
+        screen = QApplication.primaryScreen()
+        screen_size = screen.availableVirtualSize()
+        _logger.debug(f"{screen_size = }")
+
+        newMinimumWidth = max(
+            self.minimumSize().width(),
+            screen_size.width() // 3,
+        )
+        self.setMinimumWidth(newMinimumWidth)
 
     def _set_current_location_label(self):
         starting_index = self.model._current_page * self.model.rows_per_page + 1
