@@ -146,8 +146,6 @@ class QSourceSelector(qt.QWidget):
         self.mainLayout.addWidget(self.fileWidget)
 
     def tiledConnection(self):
-        # FIXME: pressing the bluesky button should switch tabs and populate run selector
-        # table and data channels table
         self.tiledWidget = QTiledWidget()
         self.tiledWidget.show_dialog()
         _logger.debug(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")

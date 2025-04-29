@@ -112,7 +112,9 @@ class TiledDataSource(QSource.QSource):
         stream: str = "primary",
     ) -> DaskArrayClient:
         """Get array data from Tiled client"""
-        return self.client[(*path, stream, "data", data_key)]
+        # TODO: Tiled returns a list of bluesky runs when accessing the
+        # client with multiple uids. Only use the first one
+        return self.client[path[0]][stream, "data", data_key]
 
     def _ensure_max_dims(
         self,

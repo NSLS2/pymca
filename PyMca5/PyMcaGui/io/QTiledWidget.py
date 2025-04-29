@@ -361,7 +361,7 @@ class QTiledWidget(QWidget):
             # key = self.info['Key']
             _logger.debug('deal with later')
         dataObject = self.data.getDataObject(key,
-                                             selection=None)
+                                             selection=selection)
         # if dataObject is not None:
         #     dataObject.info['legend'] = self.info['Key']
         #     dataObject.info['imageselection'] = False

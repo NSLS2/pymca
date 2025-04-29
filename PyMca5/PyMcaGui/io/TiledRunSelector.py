@@ -164,6 +164,7 @@ class TiledRunSelector(object):
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
         node = self.get_node(node_path_parts)[0]
+        self.node_path_parts = node_path_parts
 
         self.open_button_enabled = True
 
