@@ -163,8 +163,10 @@ class TiledRunSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node = self.get_node(node_path_parts)[0]
-        self.node_path_parts = node_path_parts
+        node = self.get_node(node_path_parts)
+        # Don't update model.node_path_parts here
+        # If model.node_path_parts gets updated here, the navigation
+        # buttons think we are inside the run
 
         self.open_button_enabled = True
 
@@ -218,8 +220,12 @@ class TiledRunSelector(object):
     @functools.lru_cache(maxsize=1)
     def get_node(self, node_path_parts: Tuple[str]) -> BaseClient:
         """Fetch a Tiled client corresponding to the node path."""
+        # NOTE: Passing tiled a tuple returns a list of bluesky runs
+        # even if there is only one item in the tuple
+        # This may change in the future when the capibility to pass a list
+        # of uids to tiled is removed
         if node_path_parts:
-            return self.client[node_path_parts]
+            return self.client[node_path_parts[0]]
         
         # An empty tuple indicates the root node
         return self.client

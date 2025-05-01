@@ -308,6 +308,10 @@ class QTiledWidget(QWidget):
         self.open_button.setEnabled(model.open_button_enabled)
 
     def _on_item_double_click(self, item):
+        # TODO: do we want users to be able to click into a run?
+        # If no, we should disable this function
+        # If yes, we need to be careful of the node_path_parts and
+        # the state of the open button
         if item is self.catalog_breadcrumbs:
             self.model.exit_node()
             return
@@ -373,6 +377,11 @@ class QTiledWidget(QWidget):
     def _on_add_clicked(self, *, emit=True):
         """Add plot to ScanWindow."""
         _logger.debug("QTiledWidget._on_add_clicked()...")
+        selected = self.catalog_table.selectedItems()
+        if not selected:
+            return
+        item = selected[0]
+        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
         sel_list = []
         channel_sel  = self.data_channel_table.getChannelSelection()
         _logger.debug(f'{channel_sel = }')
@@ -382,8 +391,8 @@ class QTiledWidget(QWidget):
                 sel = {
                     'SourceName': self.data.sourceName,
                     'SourceType': self.data.sourceType,
-                    'Key': self.model.node_path_parts,
-                    'legend': '/'.join(self.model.node_path_parts),
+                    'Key': selected_node_path_parts,
+                    'legend': '/'.join(selected_node_path_parts),
                     'selection': {'x': channel_sel['x'],
                                   'y': channel_sel['y'],
                                   'm': channel_sel['m'],
