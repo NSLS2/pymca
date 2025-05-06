@@ -1,10 +1,12 @@
 import logging
 from typing import Callable, Mapping, Optional, Tuple
 
+from datetime import datetime
+
 from PyQt5.QtWidgets import (
     QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem, QTextEdit,
-    QVBoxLayout, QWidget,
+    QVBoxLayout, QWidget, QHeaderView
 )
 from PyQt5.QtCore import Qt
 from tiled.structures.core import StructureFamily
@@ -85,12 +87,19 @@ class QTiledWidget(QWidget):
         self._rebuild_current_path_layout()
 
         # Catalog table elements
-        self.catalog_table = QTableWidget(0, 1)
-        self.catalog_table.horizontalHeader().setStretchLastSection(True)
+        self.catalog_table = QTableWidget(0, 6)
+        self.catalog_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.catalog_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.catalog_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        # self.catalog_table.horizontalHeader().setStretchLastSection(True)
+        self.catalog_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.catalog_table.setEditTriggers(
             QTableWidget.EditTrigger.NoEditTriggers
         )  # disable editing
-        self.catalog_table.horizontalHeader().hide()  # remove header
+        self.catalog_table.setHorizontalHeaderLabels(
+            ["Scan ID", "UID", "Plan Name", "Start Time", "Stop Time", "Status"]
+        )
+        self.catalog_table.wordWrap = True
         self.catalog_table.setSelectionMode(
             QAbstractItemView.SelectionMode.SingleSelection
         )  # disable multi-select
@@ -248,10 +257,30 @@ class QTiledWidget(QWidget):
         for row_index, (key, value) in zip(
             range(start, self.catalog_table.rowCount()), items
         ):
+            start_doc = value.start
+            scan_id = start_doc.get("scan_id")
+            plan_name = start_doc.get("plan_name")
+            start_time = start_doc.get("start_datetime")
+            if start_time is None:
+                start_time = datetime.fromtimestamp(start_doc.get("time")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            else:
+                start_time = datetime.fromisoformat(start_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            stop_doc = value.stop
+            if stop_doc is None:
+                stop_doc = {}
+            exit_status = stop_doc.get("exit_status")
+            if exit_status == "success":
+                status_icon = self.style().standardIcon(QStyle.SP_DialogApplyButton)
+            else:
+                status_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
+            stop_time = datetime.fromtimestamp(stop_doc.get("time")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
             family = value.item["attributes"]["structure_family"]
 
             if family == StructureFamily.container:
-                icon = self.style().standardIcon(QStyle.SP_DirHomeIcon)
+                # Change the icon for BlueskyRuns so it doesn't look like
+                # users should click into the runs
+                icon = self.style().standardIcon(QStyle.SP_FileIcon)
             elif family == StructureFamily.array:
                 icon = self.style().standardIcon(
                     QStyle.SP_FileIcon
@@ -261,9 +290,32 @@ class QTiledWidget(QWidget):
                     QStyle.SP_TitleBarContextHelpButton
                 )
 
+            # columns: ["Scan ID", "UID", "Plan Name", "Start Time", "Stop Time", "Status"]
+            # scan_id
             self.catalog_table.setItem(
-                row_index, 0, QTableWidgetItem(icon, key)
+                row_index, 0, QTableWidgetItem(icon, str(scan_id))
             )
+            # first 8 chars of uid
+            self.catalog_table.setItem(
+                row_index, 1, QTableWidgetItem(key[:8])
+            )
+            # plan_name
+            self.catalog_table.setItem(
+                row_index, 2, QTableWidgetItem(plan_name)
+            )
+            # start_time
+            self.catalog_table.setItem(
+                row_index, 3, QTableWidgetItem(str(start_time).replace(" ", "\n"))
+            )
+            # stop_time
+            self.catalog_table.setItem(
+                row_index, 4, QTableWidgetItem(str(stop_time))
+            )
+            # exit_status
+            self.catalog_table.setItem(
+                row_index, 5, QTableWidgetItem(status_icon, "")
+            )
+            self.catalog_table.resizeRowsToContents()
 
         # remove extra rows
         for _ in range(rows_per_page - len(items)):
@@ -297,10 +349,12 @@ class QTiledWidget(QWidget):
         model = self.model
 
         selected = self.catalog_table.selectedItems()
-        if not selected or (item := selected[0]) is self.catalog_breadcrumbs:
+        if not selected or selected[0] is self.catalog_breadcrumbs:
             self._clear_metadata()
             return
-
+        # selected[0] is scan_id
+        # selected[1] is partial uid
+        item = selected[1]
         child_node_path = item.text()
         model.on_item_selected(child_node_path)
 
@@ -322,7 +376,7 @@ class QTiledWidget(QWidget):
         selected = self.catalog_table.selectedItems()
         if not selected:
             return
-        item = selected[0]
+        item = selected[1]
         self.model.open_run(item.text())
         self.populate_data_channel_table(item.text())
 
@@ -380,7 +434,7 @@ class QTiledWidget(QWidget):
         selected = self.catalog_table.selectedItems()
         if not selected:
             return
-        item = selected[0]
+        item = selected[1]
         selected_node_path_parts = self.model.node_path_parts + (item.text(),)
         sel_list = []
         channel_sel  = self.data_channel_table.getChannelSelection()

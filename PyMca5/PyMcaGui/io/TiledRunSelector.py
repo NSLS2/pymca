@@ -179,7 +179,8 @@ class TiledRunSelector(object):
         if family == StructureFamily.array:
             shape = attrs["structure"]["shape"]
             info += f"<b>shape:</b> {tuple(shape)}<br>"
-        info += f"<b>metadata:</b> {metadata}"
+        info += f"<b>metadata:</b> <pre>{metadata}</pre>"
+        
         self.info_text = info
     
     def open_run(self, child_node_path):
