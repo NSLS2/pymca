@@ -163,9 +163,14 @@ class QSourceSelector(qt.QWidget):
         self.sigSourceSelectorSignal.emit(ddict)
 
         # # Potentially add a authorization window when clicked
+        # TODO: start polling loop for tiled data
 
     def _reload(self):
         _logger.debug("_reload called")
+        if hasattr(self, "tiledWidget"):
+            self.tiledWidget.model.client.refresh()
+            return
+
         qstring = self.fileCombo.currentText()
         if not len(qstring):
             return

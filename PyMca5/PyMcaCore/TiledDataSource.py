@@ -114,7 +114,7 @@ class TiledDataSource(QSource.QSource):
         """Get array data from Tiled client"""
         # TODO: Tiled returns a list of bluesky runs when accessing the
         # client with multiple uids. Only use the first one
-        return self.client[path[0]][stream, "data", data_key]
+        return self.client[path[0]][stream, "data", data_key].read()
 
     def _ensure_max_dims(
         self,
