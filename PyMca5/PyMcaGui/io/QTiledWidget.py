@@ -363,6 +363,7 @@ class QTiledWidget(QWidget):
 
     def _on_item_double_click(self, item):
         # TODO: do we want users to be able to click into a run?
+        # Maybe we should let the users pick the streams they want to plot
         # If no, we should disable this function
         # If yes, we need to be careful of the node_path_parts and
         # the state of the open button
@@ -391,6 +392,8 @@ class QTiledWidget(QWidget):
         # i.e. User sets rows_per_page to 10 in catalog selector and that gets
         # passed into the run selector
 
+        if self.dialog.model.client is None:
+            return
         self.model.url = self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri
 
         _logger.debug(f"{self.model.url = }")
@@ -402,7 +405,8 @@ class QTiledWidget(QWidget):
         selection = self.set_data_source_key()
 
         if selection is not None:
-            dataObject = self._getDataObject(selection=selection)
+            # TODO: figure out how to let user pick stream
+            dataObject = self._getDataObject(selection=selection, stream="primary")
             # self.graphWidget.setImageData(dataObject.data)
             self.lastDataObject = dataObject
 
@@ -414,12 +418,15 @@ class QTiledWidget(QWidget):
         _logger.debug(f"QTiledWidget {self.selection = }")
         return self.selection
     
-    def _getDataObject(self, key=None, selection=None):
+    def _getDataObject(self, key=None, selection=None, stream="primary"):
         if key is None:
             # key = self.info['Key']
             _logger.debug('deal with later')
-        dataObject = self.data.getDataObject(key,
-                                             selection=selection)
+        dataObject = self.data.getDataObject(
+            key,
+            selection=selection,
+            stream=stream,
+        )
         # if dataObject is not None:
         #     dataObject.info['legend'] = self.info['Key']
         #     dataObject.info['imageselection'] = False
@@ -508,9 +515,9 @@ class QTiledWidget(QWidget):
         # TODO find another way to do this?
         self.select_tiled_catalog.clicked.connect(self.show_dialog)
         self.catalog_table.itemSelectionChanged.connect(self._on_item_selected)
-        self.catalog_table.itemDoubleClicked.connect(
-            self._on_item_double_click
-        )
+        # self.catalog_table.itemDoubleClicked.connect(
+        #     self._on_item_double_click
+        # )
         self.open_button.clicked.connect(self._on_load)
         self.add_button.clicked.connect(self._on_add_clicked)
 

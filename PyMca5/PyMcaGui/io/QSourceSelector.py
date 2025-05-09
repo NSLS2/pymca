@@ -148,6 +148,8 @@ class QSourceSelector(qt.QWidget):
     def tiledConnection(self):
         self.tiledWidget = QTiledWidget()
         self.tiledWidget.show_dialog()
+        if self.tiledWidget.dialog.model.client is None:
+            return
         _logger.debug(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")
         self.tiledWidget.model.table_changed.emit(self.tiledWidget.dialog.model.node_path_parts)
 

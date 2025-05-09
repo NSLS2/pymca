@@ -50,15 +50,15 @@ class TiledDataSource(QSource.QSource):
         # self.sigUpdated.emit(self.sourceName)
         pass
 
-    def getDataObject(self, key_list, selection=None):
+    def getDataObject(self, key_list, selection=None, stream="primary"):
         """Retrieve a dataObject that will be used to plot scan data."""
         if not isinstance(key_list, list):
             key_list = [key_list]
-        data = self.get_data_object(key_list, selection=selection)
+        data = self.get_data_object(key_list, selection=selection, stream=stream)
 
         return data
 
-    def get_data_object(self, key, selection=None):
+    def get_data_object(self, key, selection=None, stream="primary"):
         """Generate a dataObject that will be used to plot scan data."""
         _logger.debug("-------- QTiledDataSource get_data_object")
         _logger.debug(f'{key = }')
@@ -76,15 +76,27 @@ class TiledDataSource(QSource.QSource):
         # For now, only support one key (corresponding to one source)
         key = key[0]
         dataObject.x = (
-            self._get_data(path=key, data_key=channel_names[channel_index])
+            self._get_data(
+                path=key,
+                data_key=channel_names[channel_index],
+                stream=stream
+            )
             for channel_index in selection["x"]
         )
         dataObject.y = (
-            self._get_data(path=key, data_key=channel_names[channel_index])
+            self._get_data(
+                path=key,
+                data_key=channel_names[channel_index],
+                stream=stream
+            )
             for channel_index in selection["y"]
         )
         dataObject.m = (
-            self._get_data(path=key, data_key=channel_names[channel_index])
+            self._get_data(
+                path=key,
+                data_key=channel_names[channel_index],
+                stream=stream
+            )
             for channel_index in selection["m"]
         )
 
