@@ -109,7 +109,7 @@ class QTiledWidget(QWidget):
         # Info layout
         self.info_box = QTextEdit()
         self.info_box.setReadOnly(True)
-        self.open_button = QPushButton("Open")
+        self.open_button = QPushButton("Import data")
         self.open_button.setEnabled(False)
         catalog_info_layout = QHBoxLayout()
         catalog_info_layout.addWidget(self.catalog_table)
