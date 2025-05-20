@@ -34,6 +34,8 @@ class QTiledWidget(QWidget):
         super().__init__()
         if dialog_model is None:
             dialog_model = TiledCatalogSelector()
+            # dialog_model = TiledCatalogSelector("https://tiled.nsls2.bnl.gov/api")
+            # dialog_model = TiledCatalogSelector("https://tiled-demo.blueskyproject.io/api")
         self.dialog = QTiledCatalogSelectorDialog(model=dialog_model)
 
         if model is None:
@@ -215,13 +217,17 @@ class QTiledWidget(QWidget):
         self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
 
     def _set_current_location_label(self):
+        _logger.debug(f"                                      {len(self.model.get_current_node())}")
         starting_index = self.model._current_page * self.model.rows_per_page + 1
         ending_index = min(
             self.model.rows_per_page * (self.model._current_page + 1),
             len(self.model.get_current_node()),
         )
         current_location_text = f"{starting_index}-{ending_index} of {len(self.model.get_current_node())}"
+        _logger.debug(f"         Before setText              {self.current_location_label.text()}")
         self.current_location_label.setText(current_location_text)
+        _logger.debug(f"         After setText               {self.current_location_label.text()}")
+        self.current_location_label.update()
 
     def populate_run_table(self):
         original_state = {}
@@ -273,7 +279,11 @@ class QTiledWidget(QWidget):
                 status_icon = self.style().standardIcon(QStyle.SP_DialogApplyButton)
             else:
                 status_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
-            stop_time = datetime.fromtimestamp(stop_doc.get("time")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            stop_time = stop_doc.get("time")
+            if stop_time is None:
+                stop_time = ""
+            else:
+                stop_time = datetime.fromtimestamp(stop_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
             family = value.item["attributes"]["structure_family"]
 
@@ -486,15 +496,17 @@ class QTiledWidget(QWidget):
             # TODO: Display the error message; suggest a remedy
             ...
 
+        self.model.refresh_client.connect(self.model.on_refresh_client)
+
         @self.model.table_changed.connect
         def on_table_changed(node_path_parts: Tuple[str]):
             _logger.debug(f"on_table_changed(): {node_path_parts = }")
             if self.model.client is None:
                 # TODO: handle disconnecting from tiled client later
                 return
+            self._set_current_location_label()
             self.populate_run_table()
             self._rebuild_current_path_layout()
-            self._set_current_location_label()
 
         self.model.url_changed.connect(self.model.on_url_changed)
 
