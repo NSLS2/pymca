@@ -496,8 +496,6 @@ class QTiledWidget(QWidget):
             # TODO: Display the error message; suggest a remedy
             ...
 
-        self.model.refresh_client.connect(self.model.on_refresh_client)
-
         @self.model.table_changed.connect
         def on_table_changed(node_path_parts: Tuple[str]):
             _logger.debug(f"on_table_changed(): {node_path_parts = }")

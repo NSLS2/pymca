@@ -8,7 +8,6 @@ from typing import Callable, List, Mapping, Optional, Sequence, Tuple
 from urllib.parse import ParseResult, urlparse as _urlparse
 
 from PyQt5.QtCore import QObject, pyqtSignal
-# from PyQt5.QtWidgets import QApplication
 
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
@@ -34,9 +33,6 @@ class TiledRunSelectorSignals(QObject):
     client_connection_error = pyqtSignal(
         str, # Error message
         name="TiledRunSelector.client_connection_error",
-    )
-    refresh_client = pyqtSignal(
-        name="TiledRunSelector.refresh_client",
     )
     table_changed = pyqtSignal(
         tuple, # New node path parts, tuple of strings
@@ -77,7 +73,6 @@ class TiledRunSelector(object):
         self.signals = self.Signals(parent)
         self.client_connected = self.signals.client_connected
         self.client_connection_error = self.signals.client_connection_error
-        self.refresh_client = self.signals.refresh_client
         self.table_changed = self.signals.table_changed
         self.url_changed = self.signals.url_changed
 
@@ -276,14 +271,6 @@ class TiledRunSelector(object):
         else:
             _logger.error(f"StructureFamily not supported:'{family}")
             # TODO: Emit an error signal for dialog widget to respond to
-
-    def on_refresh_client(self):
-        """Update content from Tiled server."""
-        if self.client is None:
-            return
-        self.client.refresh()
-        self.table_changed.emit(self.node_path_parts)
-        # QApplication.processEvents()
 
     @staticmethod
     def client_from_url(url: str):

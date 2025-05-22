@@ -33,7 +33,6 @@ import logging
 import time as ttime
 _logger = logging.getLogger(__name__)
 
-from PyQt5.QtCore import QTimer, QThread
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 QTVERSION = qt.qVersion()
@@ -42,8 +41,7 @@ from PyMca5.PyMcaIO import spswrap as sps
 from PyMca5 import PyMcaDirs
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
 from PyMca5.PyMcaGui.io.QTiledWidget import QTiledWidget
-from PyMca5.PyMcaGui.pymca.QStack import SimpleThread
-from PyMca5.PyMcaGui.pymca.SilxScatterWindow import TimerLoop
+
 
 BLISS = False
 if sys.version_info > (3, 5):
@@ -172,42 +170,8 @@ class QSourceSelector(qt.QWidget):
         # # Potentially add a authorization window when clicked
         # TODO: start polling loop for tiled data
 
-        # def refresh_tiled_client():
-        #     while True:
-        #         QThread.sleep(10)
-        #         print("%%%% doing client refresh")
-        #         # Can tiled tell us how many new things are there?
-        #         print(f"^^^          Before: {len(self.tiledWidget.model.client) = }")
-        #         self.tiledWidget.model.client.refresh()
-        #         print(f"^^^          After: {len(self.tiledWidget.model.client) = }")
-        #         self.tiledWidget.model.table_changed.emit(self.tiledWidget.model.node_path_parts)
-        #         # break
-        # self.thread = SimpleThread(refresh_tiled_client)
-        # self.thread.start()
-        # Start timer
-        def refresh_tiled_client():
-            _logger.debug("%%%% doing client refresh")
-            # Can tiled tell us how many new things are there?
-            _logger.debug(f"^^^          Before: {len(self.tiledWidget.model.client) = }")
-            # Don't do refresh, send signal to do refresh
-            self.tiledWidget.model.refresh_client.emit()
-            # self.tiledWidget.model.client.refresh()
-            _logger.debug(f"^^^          After: {len(self.tiledWidget.model.client) = }")
-            # move into model refresh_client function
-            # self.tiledWidget.model.table_changed.emit(self.tiledWidget.model.node_path_parts)
-            # break
-        # self.loop = TimerLoop(refresh_tiled_client, period=10000)
-        timer = QTimer(self)
-        timer.setInterval(10_000)
-        timer.timeout.connect(self.tiledWidget.model.on_refresh_client)
-        timer.start()
-
     def _reload(self):
         _logger.debug("_reload called")
-        if hasattr(self, "tiledWidget"):
-            self.tiledWidget.model.client.refresh()
-            self.tiledWidget.model.table_changed.emit(self.tiledWidget.model.node_path_parts)
-            return
 
         qstring = self.fileCombo.currentText()
         if not len(qstring):
