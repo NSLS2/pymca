@@ -34,8 +34,6 @@ class QTiledWidget(QWidget):
         super().__init__()
         if dialog_model is None:
             dialog_model = TiledCatalogSelector()
-            # dialog_model = TiledCatalogSelector("https://tiled.nsls2.bnl.gov/api")
-            # dialog_model = TiledCatalogSelector("https://tiled-demo.blueskyproject.io/api")
         self.dialog = QTiledCatalogSelectorDialog(model=dialog_model)
 
         if model is None:
@@ -93,7 +91,6 @@ class QTiledWidget(QWidget):
         self.catalog_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         self.catalog_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.catalog_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
-        # self.catalog_table.horizontalHeader().setStretchLastSection(True)
         self.catalog_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.catalog_table.setEditTriggers(
             QTableWidget.EditTrigger.NoEditTriggers

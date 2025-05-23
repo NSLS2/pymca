@@ -223,7 +223,7 @@ class TiledRunSelector(object):
         """Fetch a Tiled client corresponding to the node path."""
         # NOTE: Passing tiled a tuple returns a list of bluesky runs
         # even if there is only one item in the tuple
-        # This may change in the future when the capibility to pass a list
+        # This may change in the future when the capability to pass a list
         # of uids to tiled is removed
         if node_path_parts:
             return self.client[node_path_parts[0]]
