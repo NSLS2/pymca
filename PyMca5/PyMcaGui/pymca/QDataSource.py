@@ -53,14 +53,16 @@ else:
     from PyMca5.PyMcaGui.pymca import QSpsDataSource
     sps = QSpsDataSource.SpsDataSource.sps
     from PyMca5.PyMcaGui.io import QSpsWidget, QTiledWidget
+    from PyMca5.PyMcaCore import TiledDataSource
     source_types = { SpecFileDataSource.SOURCE_TYPE: SpecFileDataSource.SpecFileDataSource,
                      EdfFileDataSource.SOURCE_TYPE:  EdfFileDataSource.EdfFileDataSource,
-                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource}
+                     QSpsDataSource.SOURCE_TYPE: QSpsDataSource.QSpsDataSource,
+                     TiledDataSource.SOURCE_TYPE: TiledDataSource.TiledDataSource}
 
     source_widgets = { SpecFileDataSource.SOURCE_TYPE: QSpecFileWidget.QSpecFileWidget,
                        EdfFileDataSource.SOURCE_TYPE: QEdfFileWidget.QEdfFileWidget,
                        QSpsDataSource.SOURCE_TYPE: QSpsWidget.QSpsWidget,
-                       "Tiled": QTiledWidget.QTiledWidget}
+                       TiledDataSource.SOURCE_TYPE: QTiledWidget.QTiledWidget}
 
 NEXUS = True
 try:
@@ -89,6 +91,10 @@ def getSourceType(sourceName0):
     if sps is not None:
         if sourceName in sps.getspeclist():
             return QSpsDataSource.SOURCE_TYPE
+
+    if TiledDataSource._is_Tiled_Source(sourceName):
+        return TiledDataSource.SOURCE_TYPE
+
     if not os.path.exists(sourceName):
         if ('%' in sourceName):
             try:

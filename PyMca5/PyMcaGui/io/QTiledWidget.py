@@ -1,10 +1,12 @@
 import logging
 from typing import Callable, Mapping, Optional, Tuple
 
+from datetime import datetime
+
 from PyQt5.QtWidgets import (
     QAbstractItemView, QComboBox, QDialog, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem, QTextEdit,
-    QVBoxLayout, QWidget,
+    QVBoxLayout, QWidget, QHeaderView
 )
 from PyQt5.QtCore import Qt
 from tiled.structures.core import StructureFamily
@@ -85,12 +87,18 @@ class QTiledWidget(QWidget):
         self._rebuild_current_path_layout()
 
         # Catalog table elements
-        self.catalog_table = QTableWidget(0, 1)
-        self.catalog_table.horizontalHeader().setStretchLastSection(True)
+        self.catalog_table = QTableWidget(0, 6)
+        self.catalog_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        self.catalog_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.catalog_table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        self.catalog_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.catalog_table.setEditTriggers(
             QTableWidget.EditTrigger.NoEditTriggers
         )  # disable editing
-        self.catalog_table.horizontalHeader().hide()  # remove header
+        self.catalog_table.setHorizontalHeaderLabels(
+            ["Scan ID", "UID", "Plan Name", "Start Time", "Stop Time", "Status"]
+        )
+        self.catalog_table.wordWrap = True
         self.catalog_table.setSelectionMode(
             QAbstractItemView.SelectionMode.SingleSelection
         )  # disable multi-select
@@ -100,7 +108,7 @@ class QTiledWidget(QWidget):
         # Info layout
         self.info_box = QTextEdit()
         self.info_box.setReadOnly(True)
-        self.open_button = QPushButton("Open")
+        self.open_button = QPushButton("Import data")
         self.open_button.setEnabled(False)
         catalog_info_layout = QHBoxLayout()
         catalog_info_layout.addWidget(self.catalog_table)
@@ -119,27 +127,27 @@ class QTiledWidget(QWidget):
         self.catalog_table_widget.setVisible(False)
 
         # Data Channels Table
-        self.data_channels_table = QTiledDataChannelTable()
-        self.data_channels_table.setVisible(False)
+        self.data_channel_table = QTiledDataChannelTable()
+        self.data_channel_table.setVisible(False)
 
         # Command Button Elements
         self.command_button_widget = QWidget()
         self.command_button_widget.setSizePolicy(qt.QSizePolicy.Minimum,
                                    qt.QSizePolicy.Minimum)
-        add_button = qt.QPushButton("ADD", self.command_button_widget)
-        remove_button = qt.QPushButton("REMOVE", self.command_button_widget)
-        replace_button = qt.QPushButton("REPLACE", self.command_button_widget)
+        self.add_button = qt.QPushButton("ADD", self.command_button_widget)
+        self.remove_button = qt.QPushButton("REMOVE", self.command_button_widget)
+        self.replace_button = qt.QPushButton("REPLACE", self.command_button_widget)
 
         # Command Buttons Layout
         command_button_layout = qt.QHBoxLayout(self.command_button_widget)
-        command_button_layout.addWidget(add_button)
-        command_button_layout.addWidget(remove_button)
-        command_button_layout.addWidget(replace_button)
+        command_button_layout.addWidget(self.add_button)
+        command_button_layout.addWidget(self.remove_button)
+        command_button_layout.addWidget(self.replace_button)
         command_button_layout.setContentsMargins(5, 5, 5, 5)
         self.command_button_widget.setVisible(False)
 
         data_channel_layout = QVBoxLayout()
-        data_channel_layout.addWidget(self.data_channels_table)
+        data_channel_layout.addWidget(self.data_channel_table)
         data_channel_layout.addWidget(self.command_button_widget)
         
         self.data_channel_widget = QWidget()
@@ -198,7 +206,7 @@ class QTiledWidget(QWidget):
 
     def reset_rows_per_page(self) -> None:
         """Reset the state of the rows_per_page_selector widget."""
-        _logger.debug("QTiledCatalogSelectorDialog.reset_rows_per_page()...")
+        _logger.debug("QTiledWidget.reset_rows_per_page()...")
 
         self.rows_per_page_selector.addItems(
             [str(option) for option in self.model._rows_per_page_options]
@@ -206,20 +214,24 @@ class QTiledWidget(QWidget):
         self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
 
     def _set_current_location_label(self):
+        _logger.debug(f"                                      {len(self.model.get_current_node())}")
         starting_index = self.model._current_page * self.model.rows_per_page + 1
         ending_index = min(
             self.model.rows_per_page * (self.model._current_page + 1),
             len(self.model.get_current_node()),
         )
         current_location_text = f"{starting_index}-{ending_index} of {len(self.model.get_current_node())}"
+        _logger.debug(f"         Before setText              {self.current_location_label.text()}")
         self.current_location_label.setText(current_location_text)
+        _logger.debug(f"         After setText               {self.current_location_label.text()}")
+        self.current_location_label.update()
 
     def populate_run_table(self):
         original_state = {}
         # TODO: may need if condition if we implement a disconnect button
         self.catalog_table_widget.setVisible(True)
-        self.data_channels_table.setVisible(True)
-        self.data_channels_table.format_table()
+        self.data_channel_table.setVisible(True)
+        self.data_channel_table.format_table()
         self.command_button_widget.setVisible(True)
 
         original_state["blockSignals"] = self.catalog_table.blockSignals(True)
@@ -248,10 +260,34 @@ class QTiledWidget(QWidget):
         for row_index, (key, value) in zip(
             range(start, self.catalog_table.rowCount()), items
         ):
+            start_doc = value.start
+            scan_id = start_doc.get("scan_id")
+            plan_name = start_doc.get("plan_name")
+            start_time = start_doc.get("start_datetime")
+            if start_time is None:
+                start_time = datetime.fromtimestamp(start_doc.get("time")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            else:
+                start_time = datetime.fromisoformat(start_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+            stop_doc = value.stop
+            if stop_doc is None:
+                stop_doc = {}
+            exit_status = stop_doc.get("exit_status")
+            if exit_status == "success":
+                status_icon = self.style().standardIcon(QStyle.SP_DialogApplyButton)
+            else:
+                status_icon = self.style().standardIcon(QStyle.SP_DialogCancelButton)
+            stop_time = stop_doc.get("time")
+            if stop_time is None:
+                stop_time = ""
+            else:
+                stop_time = datetime.fromtimestamp(stop_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
             family = value.item["attributes"]["structure_family"]
 
             if family == StructureFamily.container:
-                icon = self.style().standardIcon(QStyle.SP_DirHomeIcon)
+                # Change the icon for BlueskyRuns so it doesn't look like
+                # users should click into the runs
+                icon = self.style().standardIcon(QStyle.SP_FileIcon)
             elif family == StructureFamily.array:
                 icon = self.style().standardIcon(
                     QStyle.SP_FileIcon
@@ -261,9 +297,32 @@ class QTiledWidget(QWidget):
                     QStyle.SP_TitleBarContextHelpButton
                 )
 
+            # columns: ["Scan ID", "UID", "Plan Name", "Start Time", "Stop Time", "Status"]
+            # scan_id
             self.catalog_table.setItem(
-                row_index, 0, QTableWidgetItem(icon, key)
+                row_index, 0, QTableWidgetItem(icon, str(scan_id))
             )
+            # first 8 chars of uid
+            self.catalog_table.setItem(
+                row_index, 1, QTableWidgetItem(key[:8])
+            )
+            # plan_name
+            self.catalog_table.setItem(
+                row_index, 2, QTableWidgetItem(plan_name)
+            )
+            # start_time
+            self.catalog_table.setItem(
+                row_index, 3, QTableWidgetItem(str(start_time).replace(" ", "\n"))
+            )
+            # stop_time
+            self.catalog_table.setItem(
+                row_index, 4, QTableWidgetItem(str(stop_time))
+            )
+            # exit_status
+            self.catalog_table.setItem(
+                row_index, 5, QTableWidgetItem(status_icon, "")
+            )
+            self.catalog_table.resizeRowsToContents()
 
         # remove extra rows
         for _ in range(rows_per_page - len(items)):
@@ -286,8 +345,8 @@ class QTiledWidget(QWidget):
         # For now, always select data from the primary stream
         channel_list = self.model.client[child_node]["primary", "data"].keys()
         
-        self.data_channels_table.clear_table()
-        self.data_channels_table.build_table(channel_list)
+        self.data_channel_table.clear_table()
+        self.data_channel_table.build_table(channel_list)
 
     def _clear_metadata(self):
         self.info_box.setText("")
@@ -297,10 +356,12 @@ class QTiledWidget(QWidget):
         model = self.model
 
         selected = self.catalog_table.selectedItems()
-        if not selected or (item := selected[0]) is self.catalog_breadcrumbs:
+        if not selected or selected[0] is self.catalog_breadcrumbs:
             self._clear_metadata()
             return
-
+        # selected[0] is scan_id
+        # selected[1] is partial uid
+        item = selected[1]
         child_node_path = item.text()
         model.on_item_selected(child_node_path)
 
@@ -308,6 +369,11 @@ class QTiledWidget(QWidget):
         self.open_button.setEnabled(model.open_button_enabled)
 
     def _on_item_double_click(self, item):
+        # TODO: do we want users to be able to click into a run?
+        # Maybe we should let the users pick the streams they want to plot
+        # If no, we should disable this function
+        # If yes, we need to be careful of the node_path_parts and
+        # the state of the open button
         if item is self.catalog_breadcrumbs:
             self.model.exit_node()
             return
@@ -318,7 +384,7 @@ class QTiledWidget(QWidget):
         selected = self.catalog_table.selectedItems()
         if not selected:
             return
-        item = selected[0]
+        item = selected[1]
         self.model.open_run(item.text())
         self.populate_data_channel_table(item.text())
 
@@ -333,16 +399,88 @@ class QTiledWidget(QWidget):
         # i.e. User sets rows_per_page to 10 in catalog selector and that gets
         # passed into the run selector
 
+        if self.dialog.model.client is None:
+            return
         self.model.url = self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri
 
         _logger.debug(f"{self.model.url = }")
 
-        # print(f"{self.dialog.model.selected_catalog_path}")
-        # print(f"{self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri}")
+    def setDataSource(self, source):
+        self.data = source
+        self.model.url = self.data.client.uri
+        _logger.debug(f'{type(self.data) = }; {self.data = }')
+        selection = self.set_data_source_key()
+
+        if selection is not None:
+            # TODO: figure out how to let user pick stream
+            dataObject = self._getDataObject(selection=selection, stream="primary")
+            # self.graphWidget.setImageData(dataObject.data)
+            self.lastDataObject = dataObject
+
+    def set_data_source_key(self):
+        if self.model.node_path_parts:
+            self.selection = self.model.client[self.model.node_path_parts]
+        else:
+            self.selection = None
+        _logger.debug(f"QTiledWidget {self.selection = }")
+        return self.selection
+    
+    def _getDataObject(self, key=None, selection=None, stream="primary"):
+        if key is None:
+            # key = self.info['Key']
+            _logger.debug('deal with later')
+        dataObject = self.data.getDataObject(
+            key,
+            selection=selection,
+            stream=stream,
+        )
+        # if dataObject is not None:
+        #     dataObject.info['legend'] = self.info['Key']
+        #     dataObject.info['imageselection'] = False
+        #     dataObject.info['scanselection'] = False
+        #     dataObject.info['targetwidgetid'] = id(self)
+        #     self.data.addToPoller(dataObject)
+        return dataObject
+
+    def _on_add_clicked(self, *, emit=True):
+        """Add plot to ScanWindow."""
+        _logger.debug("QTiledWidget._on_add_clicked()...")
+        selected = self.catalog_table.selectedItems()
+        if not selected:
+            return
+        item = selected[1]
+        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
+        sel_list = []
+        channel_sel  = self.data_channel_table.getChannelSelection()
+        _logger.debug(f'{channel_sel = }')
+        _logger.debug(f'{self.model.node_path_parts = }')
+        if len(channel_sel['Data Channel List']):
+            if len(channel_sel['y']):
+                sel = {
+                    'SourceName': self.data.sourceName,
+                    'SourceType': self.data.sourceType,
+                    'Key': selected_node_path_parts,
+                    'legend': '/'.join(selected_node_path_parts),
+                    'selection': {'x': channel_sel['x'],
+                                  'y': channel_sel['y'],
+                                  'm': channel_sel['m'],
+                                  'Channel List': channel_sel['Data Channel List']},
+                    'scanselection': True,
+                    }
+                sel_list.append(sel)
+
+        _logger.debug(f'{sel_list = }')
+        _logger.debug(f'{emit = }')
+
+        if emit:
+            if len(sel_list):
+                self.sigAddSelection.emit(sel_list)
+            else:
+                return sel_list
 
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
-        _logger.debug("QTiledCatalogSelectorDialog.connect_model_signals()...")
+        _logger.debug("QTiledWidget.connect_model_signals()...")
 
         @self.model.client_connected.connect
         def on_client_connected(url: str, api_url: str):
@@ -361,15 +499,15 @@ class QTiledWidget(QWidget):
             if self.model.client is None:
                 # TODO: handle disconnecting from tiled client later
                 return
+            self._set_current_location_label()
             self.populate_run_table()
             self._rebuild_current_path_layout()
-            self._set_current_location_label()
 
         self.model.url_changed.connect(self.model.on_url_changed)
 
     def connect_model_slots(self) -> None:
         """Connect model slots to dialog signals."""
-        _logger.debug("QTiledCatalogSelectorDialog.connect_model_slots()...")
+        _logger.debug("QTiledWidget.connect_model_slots()...")
 
         model = self.model
 
@@ -380,13 +518,15 @@ class QTiledWidget(QWidget):
         self.rows_per_page_selector.currentIndexChanged.connect(self.model.on_rows_per_page_changed)
 
     def connect_self_signals(self):
+        _logger.debug("QTiledWidget.connect_self_signals()...")
         # TODO find another way to do this?
         self.select_tiled_catalog.clicked.connect(self.show_dialog)
         self.catalog_table.itemSelectionChanged.connect(self._on_item_selected)
-        self.catalog_table.itemDoubleClicked.connect(
-            self._on_item_double_click
-        )
+        # self.catalog_table.itemDoubleClicked.connect(
+        #     self._on_item_double_click
+        # )
         self.open_button.clicked.connect(self._on_load)
+        self.add_button.clicked.connect(self._on_add_clicked)
 
 
 # # Command Buttons Connections

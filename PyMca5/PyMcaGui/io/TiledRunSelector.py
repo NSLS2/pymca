@@ -39,7 +39,7 @@ class TiledRunSelectorSignals(QObject):
         name="TiledRunSelector.table_changed",
     )
     url_changed = pyqtSignal(
-        name="TiledCatalogSelector.url_changed",
+        name="TiledRunSelector.url_changed",
     )
     
     def __init__(self, parent: Optional[QObject] = None) -> None:
@@ -163,7 +163,10 @@ class TiledRunSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node = self.get_node(node_path_parts)[0]
+        node = self.get_node(node_path_parts)
+        # Don't update model.node_path_parts here
+        # If model.node_path_parts gets updated here, the navigation
+        # buttons think we are inside the run
 
         self.open_button_enabled = True
 
@@ -176,7 +179,8 @@ class TiledRunSelector(object):
         if family == StructureFamily.array:
             shape = attrs["structure"]["shape"]
             info += f"<b>shape:</b> {tuple(shape)}<br>"
-        info += f"<b>metadata:</b> {metadata}"
+        info += f"<b>metadata:</b> <pre>{metadata}</pre>"
+        
         self.info_text = info
     
     def open_run(self, child_node_path):
@@ -217,8 +221,12 @@ class TiledRunSelector(object):
     @functools.lru_cache(maxsize=1)
     def get_node(self, node_path_parts: Tuple[str]) -> BaseClient:
         """Fetch a Tiled client corresponding to the node path."""
+        # NOTE: Passing tiled a tuple returns a list of bluesky runs
+        # even if there is only one item in the tuple
+        # This may change in the future when the capability to pass a list
+        # of uids to tiled is removed
         if node_path_parts:
-            return self.client[node_path_parts]
+            return self.client[node_path_parts[0]]
         
         # An empty tuple indicates the root node
         return self.client

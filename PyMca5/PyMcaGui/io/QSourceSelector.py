@@ -30,7 +30,9 @@ __copyright__ = "European Synchrotron Radiation Facility, Grenoble, France"
 import sys
 import os
 import logging
+import time as ttime
 _logger = logging.getLogger(__name__)
+
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 QTVERSION = qt.qVersion()
@@ -39,6 +41,7 @@ from PyMca5.PyMcaIO import spswrap as sps
 from PyMca5 import PyMcaDirs
 from PyMca5.PyMcaGui.io import PyMcaFileDialogs
 from PyMca5.PyMcaGui.io.QTiledWidget import QTiledWidget
+
 
 BLISS = False
 if sys.version_info > (3, 5):
@@ -146,10 +149,10 @@ class QSourceSelector(qt.QWidget):
         self.mainLayout.addWidget(self.fileWidget)
 
     def tiledConnection(self):
-        # FIXME: pressing the bluesky button should switch tabs and populate run selector
-        # table and data channels table
         self.tiledWidget = QTiledWidget()
         self.tiledWidget.show_dialog()
+        if self.tiledWidget.dialog.model.client is None:
+            return
         _logger.debug(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")
         self.tiledWidget.model.table_changed.emit(self.tiledWidget.dialog.model.node_path_parts)
 
@@ -157,17 +160,19 @@ class QSourceSelector(qt.QWidget):
         _logger.debug(f"@@@ {current_catalog = }")
         _logger.debug(f"{current_catalog.uri = }")
         # url = "https://tiled-demo.blueskyproject.io/api"
-        # ddict = {
-        #     "event": "NewSourceSelected",
-        #     "sourcelist": url,
-        # }
-        # # pass info from dialog through
-        # self.sigSourceSelectorSignal.emit(ddict)
+        ddict = {
+            "event": "NewSourceSelected",
+            "sourcelist": current_catalog.uri,
+        }
+        # pass info from dialog through
+        self.sigSourceSelectorSignal.emit(ddict)
 
         # # Potentially add a authorization window when clicked
+        # TODO: start polling loop for tiled data
 
     def _reload(self):
         _logger.debug("_reload called")
+
         qstring = self.fileCombo.currentText()
         if not len(qstring):
             return
