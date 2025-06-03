@@ -2,6 +2,7 @@ import enable_pymca_import  # noqa: F401
 
 from unittest.mock import Mock, call, patch
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
@@ -41,11 +42,13 @@ def test_selected_items_in_data_channel_table(qtbot: QtBot):
         assert data_channel_table.monSelection == [2]
 
 
+@pytest.mark.xfail
 def test_add_button_gets_plottable_data(
         qtbot: QtBot,
         tiled_client_run_selector_model: TiledRunSelector
 ):
     """Add button gets data that can be plotted."""
+    # test data does not have start doc
     widget = QTiledWidget(model=tiled_client_run_selector_model)
     widget.show()
     qtbot.addWidget(widget)
@@ -66,7 +69,7 @@ def test_add_button_gets_plottable_data(
         cell_widget.click()
 
     # Click ADD
-    # widget.add_button.click()  # TODO: this does not currently work, currently WIP
+    widget.add_button.click()  # TODO: this does not currently work, currently WIP
 
     # data channel table should getChannelSelection
 
