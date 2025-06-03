@@ -1,6 +1,7 @@
 import logging
 from typing import Callable, Mapping, Optional, Tuple
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QCheckBox,
     QGridLayout,
@@ -32,8 +33,10 @@ class QTiledSearchWidget(QWidget):
 
         self.key_label = QLabel("Key")
         self.key_entry = QLineEdit()
+        self.key_entry.setClearButtonEnabled(True)
         self.value_label = QLabel("Value")
         self.value_entry = QLineEdit()
+        self.value_entry.setClearButtonEnabled(True)
         self.full_text_checkbox = QCheckBox("Full text search")
         self.regex_checkbox = QCheckBox("Use RegEx pattern")
         self.full_text_hint = QLabel("Whole words only")
@@ -55,14 +58,46 @@ class QTiledSearchWidget(QWidget):
         self.full_text_checkbox.clicked.connect(self.on_full_text_checkbox_checked)
         self.regex_checkbox.clicked.connect(self.on_regex_checkbox_checked)
 
+        self.debounce = QTimer()
+        self.debounce.setInterval(1000)
+        self.debounce.setSingleShot(True)
+        self.debounce.timeout.connect(self.debounced_search)
+
+        self.key_entry.textChanged.connect(self.debounce.start)
+        self.value_entry.textChanged.connect(self.debounce.start)
+
+    def _search(self):
+        key = self.key_entry.text()
+        print(f"Key: {key}")
+        value = self.value_entry.text()
+        print(f"Value: {value}")
+        print("Searching...")
+        full_text_enabled = self.full_text_checkbox.isChecked()
+        regex_enabled = self.regex_checkbox.isChecked()
+        if full_text_enabled:
+            search_type = "full_text"
+            key = None
+        elif regex_enabled:
+            search_type = "regex"
+        else:
+            search_type = "key_value"
+        self.model.on_search(key, value, search_type)
+
+    def debounced_search(self):
+        self._search()
+
     def on_full_text_checkbox_checked(self):
         self.regex_checkbox.setVisible(not self.regex_checkbox.isVisible())
         self.full_text_hint.setVisible(not self.full_text_hint.isVisible())
         self.key_label.setEnabled(not self.key_label.isEnabled())
         self.key_entry.setEnabled(not self.key_entry.isEnabled())
+        # if self.full_text_checkbox.isChecked():
+        self._search()
 
     def on_regex_checkbox_checked(self):
         self.full_text_checkbox.setEnabled(not self.full_text_checkbox.isEnabled())
+        # if self.regex_checkbox.isChecked():
+        self._search()
 
 
 if __name__ == "__main__":
@@ -72,7 +107,8 @@ if __name__ == "__main__":
     app = QApplication(argv)
     window = QMainWindow()
     model = TiledRunSelector(parent=app)
-    model.url = "https://tiled-demo.blueskyproject.io/api"
+    # model.url = "https://tiled-demo.blueskyproject.io/api/v1/metadata/bmm/raw"
+    model.connect_client()
     widget = QTiledSearchWidget(model=model)
 
     window.show()

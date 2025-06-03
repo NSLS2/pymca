@@ -13,11 +13,12 @@ from tiled.structures.core import StructureFamily
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
-from PyMca5.PyMcaGui.io.QTiledDataChannelTable import QTiledDataChannelTable
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
+from PyMca5.PyMcaGui.io.QTiledDataChannelTable import QTiledDataChannelTable
 from PyMca5.PyMcaGui.io.QTiledCatalogSelectorDialog import (
     QTiledCatalogSelectorDialog, ClickableQLabel, ClickableIndexedQLabel
 )
+from PyMca5.PyMcaGui.io.QTiledSearch import QTiledSearchWidget
 
 
 _logger = logging.getLogger(__name__)
@@ -56,6 +57,8 @@ class QTiledWidget(QWidget):
         # else show normal widget
 
         self.connection_label = QLabel("No url connected")
+
+        self.search_widget = QTiledSearchWidget(model=self.model)
 
         # Navigation elements
         self.rows_per_page_label = QLabel("Rows per page: ")
@@ -157,6 +160,7 @@ class QTiledWidget(QWidget):
         self.splitter.setOrientation(Qt.Orientation.Vertical)
 
         self.splitter.addWidget(self.connection_label)
+        self.splitter.addWidget(self.search_widget)
         self.splitter.addWidget(self.catalog_table_widget)
         self.splitter.addWidget(self.data_channel_widget)
 
@@ -216,11 +220,15 @@ class QTiledWidget(QWidget):
     def _set_current_location_label(self):
         _logger.debug(f"                                      {len(self.model.get_current_node())}")
         starting_index = self.model._current_page * self.model.rows_per_page + 1
+        if self.model.search_results:
+            catalog_or_search_results = self.model.search_results
+        else:
+            catalog_or_search_results = self.model.get_current_node()
         ending_index = min(
             self.model.rows_per_page * (self.model._current_page + 1),
-            len(self.model.get_current_node()),
+            len(catalog_or_search_results),
         )
-        current_location_text = f"{starting_index}-{ending_index} of {len(self.model.get_current_node())}"
+        current_location_text = f"{starting_index}-{ending_index} of {len(catalog_or_search_results)}"
         _logger.debug(f"         Before setText              {self.current_location_label.text()}")
         self.current_location_label.setText(current_location_text)
         _logger.debug(f"         After setText               {self.current_location_label.text()}")
@@ -251,9 +259,12 @@ class QTiledWidget(QWidget):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
         node_offset = rows_per_page * self.model._current_page
-        # Fetch a page of keys.
-        items = self.model.get_current_node().items()[
-            node_offset : node_offset + rows_per_page
+        if self.model.search_results:
+            catalog_or_search_results = self.model.search_results
+        else:
+            catalog_or_search_results = self.model.get_current_node()
+        items = catalog_or_search_results.items()[
+            node_offset: node_offset + rows_per_page
         ]
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.model.node_path_parts else 0
