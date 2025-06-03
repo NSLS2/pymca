@@ -20,54 +20,75 @@ def test_render(qtbot: QtBot, tiled_client_run_selector_model: TiledRunSelector)
     qtbot.addWidget(search)
 
 
-def test_regex_checkbox_disables_key_field(qtbot: QtBot):
-    """Checked RegEx checkbox should disable key and FullText elements."""
+def test_fulltext_checkbox_disables_key_field(qtbot: QtBot):
+    """Checked FullText checkbox should disable key and RegEx elements."""
     search = QTiledSearchWidget(model=None)
     search.show()
     qtbot.addWidget(search)
-    # Assert all these elemnts start enabled
+    # Key label/entry and regex checkbox should start enabled
     assert all(
         [
             element.isEnabled()
             for element in [
                 search.key_label,
-                search.key_text_edit,
-                search.full_text_checkbox,
+                search.key_entry,
+                search.regex_checkbox,
             ]
         ]
     )
+    # full text hint should start invisible
+    assert search.full_text_hint.isVisible() == False
 
-    search.regex_checkbox.click()
+    search.full_text_checkbox.click()
 
-    # None of these elements should be enabled now
+    # Key label/entry and regex checkbox should be disabled now
     assert not all(
         [
             element.isEnabled()
             for element in [
                 search.key_label,
-                search.key_text_edit,
-                search.full_text_checkbox,
+                search.key_entry,
+                search.regex_checkbox,
             ]
         ]
     )
+    # full text hint should now be visible
+    assert search.full_text_hint.isVisible() == True
+
+    # Clicking the fulltext checkbox again should set everything back to normal
+    search.full_text_checkbox.click()
+
+    # Key label/entry and regex checkbox should be enabled again
+    assert all(
+        [
+            element.isEnabled()
+            for element in [
+                search.key_label,
+                search.key_entry,
+                search.regex_checkbox,
+            ]
+        ]
+    )
+    # full text hint should be invisible again
+    assert search.full_text_hint.isVisible() == False
 
 
-def test_fulltext_checkbox_hides_regex_checkbox(qtbot: QtBot):
-    """Checked FullText checkbox should hide RegEx checkbox."""
+def test_regex_checkbox_disables_fulltext_checkbox(qtbot: QtBot):
+    """Checked RegEx checkbox should hide FullText checkbox."""
     search = QTiledSearchWidget(model=None)
     search.show()
     qtbot.addWidget(search)
-    # RegEx checkbox should be visible
-    # full text advice label should not be visible
-    assert search.regex_checkbox.isVisible() == True
-    assert search.full_text_advice.isVisible() == False
 
-    search.full_text_checkbox.click()
+    # on init
+    assert search.full_text_checkbox.isEnabled() == True
 
-    # RegEx checkbox should not be visible
-    # full text advice label should be visible
-    assert search.regex_checkbox.isVisible() == False
-    assert search.full_text_advice.isVisible() == True
+    # on checking regex checkbox
+    search.regex_checkbox.click()
+    assert search.full_text_checkbox.isEnabled() == False
+
+    # on unchecking regex checkbox
+    search.regex_checkbox.click()
+    assert search.full_text_checkbox.isEnabled() == True
 
 
 def test_empty_key_value_displays_entire_catalog(
