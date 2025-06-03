@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QTextEdit,
     QVBoxLayout,
-    QWidget
+    QWidget,
 )
 
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
@@ -65,8 +65,7 @@ class QTiledSearchWidget(QWidget):
         self.full_text_checkbox.setEnabled(not self.full_text_checkbox.isEnabled())
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     from sys import argv
     from PyQt5.QtWidgets import QApplication, QMainWindow
 
