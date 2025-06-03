@@ -107,7 +107,7 @@ if __name__ == "__main__":
     app = QApplication(argv)
     window = QMainWindow()
     model = TiledRunSelector(parent=app)
-    # model.url = "https://tiled-demo.blueskyproject.io/api/v1/metadata/bmm/raw"
+    model.url = "https://tiled-demo.blueskyproject.io/api/v1/metadata/bmm/raw"
     model.connect_client()
     widget = QTiledSearchWidget(model=model)
 
