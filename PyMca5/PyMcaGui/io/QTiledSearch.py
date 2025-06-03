@@ -31,24 +31,24 @@ class QTiledSearchWidget(QWidget):
         self.model = model
 
         self.key_label = QLabel("Key")
-        self.key_text_edit = QLineEdit()
-        value_label = QLabel("Value")
-        value_text_edit = QLineEdit()
+        self.key_entry = QLineEdit()
+        self.value_label = QLabel("Value")
+        self.value_entry = QLineEdit()
         self.full_text_checkbox = QCheckBox("Full text search")
         self.regex_checkbox = QCheckBox("Use RegEx pattern")
-        self.full_text_advice = QLabel("Whole words only")
-        self.full_text_advice.setVisible(False)
+        self.full_text_hint = QLabel("Whole words only")
+        self.full_text_hint.setVisible(False)
 
         layout = QGridLayout()
         # widget, row, column
         layout.addWidget(self.key_label, 0, 0)
-        layout.addWidget(self.key_text_edit, 0, 1)
-        layout.addWidget(value_label, 0, 2)
-        layout.addWidget(value_text_edit, 0, 3)
+        layout.addWidget(self.key_entry, 0, 1)
+        layout.addWidget(self.value_label, 0, 2)
+        layout.addWidget(self.value_entry, 0, 3)
         # widget, row, column, row span, column span
         layout.addWidget(self.full_text_checkbox, 1, 0, 1, 2)
         layout.addWidget(self.regex_checkbox, 1, 2, 1, 2)
-        layout.addWidget(self.full_text_advice, 1, 2, 1, 2)
+        layout.addWidget(self.full_text_hint, 1, 2, 1, 2)
 
         self.setLayout(layout)
 
@@ -57,11 +57,11 @@ class QTiledSearchWidget(QWidget):
 
     def on_full_text_checkbox_checked(self):
         self.regex_checkbox.setVisible(not self.regex_checkbox.isVisible())
-        self.full_text_advice.setVisible(not self.full_text_advice.isVisible())
+        self.full_text_hint.setVisible(not self.full_text_hint.isVisible())
+        self.key_label.setEnabled(not self.key_label.isEnabled())
+        self.key_entry.setEnabled(not self.key_entry.isEnabled())
 
     def on_regex_checkbox_checked(self):
-        self.key_label.setEnabled(not self.key_label.isEnabled())
-        self.key_text_edit.setEnabled(not self.key_text_edit.isEnabled())
         self.full_text_checkbox.setEnabled(not self.full_text_checkbox.isEnabled())
 
 
