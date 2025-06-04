@@ -85,7 +85,7 @@ class TiledRunSelector(object):
             self._rows_per_page_options = rows_per_page_options
         self._rows_per_page_index = 0
         self.selected_run_path = ()
-        self.search_results = []
+        self.search_results = None
 
     @property
     def url(self) -> str:
@@ -289,10 +289,18 @@ class TiledRunSelector(object):
     
     def on_search(self, key, value, search_type="key_value"):
         """Tiled search and emit table_changed."""
-        self.search_results = self.search(key, value, search_type=search_type)
-        print(f"    {len(self.search_results) = }")
-        print(f"       {self.search_results = }")
-        self.table_changed.emit(self.node_path_parts)
+        print(f"       {search_type = } {key = } {value = }")
+        previous_search_results = self.search_results
+        if search_type == "no_search":
+            self.search_results = None
+        else:
+            self.search_results = self.search(key, value, search_type=search_type)
+            print(f"    {len(self.search_results) = }")
+            print(f"         {self.search_results = }")
+        if previous_search_results == self.search_results:
+            return
+        else:
+            self.table_changed.emit(self.node_path_parts)
 
     @staticmethod
     def client_from_url(url: str):

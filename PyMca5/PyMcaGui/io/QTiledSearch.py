@@ -74,13 +74,19 @@ class QTiledSearchWidget(QWidget):
         print("Searching...")
         full_text_enabled = self.full_text_checkbox.isChecked()
         regex_enabled = self.regex_checkbox.isChecked()
-        if full_text_enabled:
+        # FullText search - full text check and non empty value
+        if value != "" and full_text_enabled:
             search_type = "full_text"
             key = None
-        elif regex_enabled:
+        # RegEx search - regex check and non empty key and value
+        elif (key != "" and value != "") and regex_enabled:
             search_type = "regex"
-        else:
+        # key value search - no checks and non empty key and value
+        elif (key != "" and value != "") and not (full_text_enabled or regex_enabled):
             search_type = "key_value"
+        # every other combo should not search
+        else:
+            search_type = "no_search"
         self.model.on_search(key, value, search_type)
 
     def debounced_search(self):

@@ -220,7 +220,7 @@ class QTiledWidget(QWidget):
     def _set_current_location_label(self):
         _logger.debug(f"                                      {len(self.model.get_current_node())}")
         starting_index = self.model._current_page * self.model.rows_per_page + 1
-        if self.model.search_results:
+        if self.model.search_results is not None:
             catalog_or_search_results = self.model.search_results
         else:
             catalog_or_search_results = self.model.get_current_node()
@@ -259,7 +259,7 @@ class QTiledWidget(QWidget):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
         node_offset = rows_per_page * self.model._current_page
-        if self.model.search_results:
+        if self.model.search_results is not None:
             catalog_or_search_results = self.model.search_results
         else:
             catalog_or_search_results = self.model.get_current_node()
