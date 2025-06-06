@@ -87,7 +87,9 @@ class QTiledSearchWidget(QWidget):
         # every other combo should not search
         else:
             search_type = "no_search"
+            return search_type
         self.model.on_search(key, value, search_type)
+        return search_type
 
     def debounced_search(self):
         self._search()
