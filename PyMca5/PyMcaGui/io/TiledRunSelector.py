@@ -12,6 +12,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from tiled.client import from_uri
 from tiled.client.base import BaseClient
 from tiled.structures.core import StructureFamily
+from tiled.queries import FullText, Key, Regex
 
 
 _logger = logging.getLogger(__name__)
@@ -84,6 +85,7 @@ class TiledRunSelector(object):
             self._rows_per_page_options = rows_per_page_options
         self._rows_per_page_index = 0
         self.selected_run_path = ()
+        self.search_results = None
 
     @property
     def url(self) -> str:
@@ -271,6 +273,34 @@ class TiledRunSelector(object):
         else:
             _logger.error(f"StructureFamily not supported:'{family}")
             # TODO: Emit an error signal for dialog widget to respond to
+
+    def search(self, key, value, search_type):
+        """Perform Tiled search."""
+        if search_type == "key_value":
+            results = self.client.search(Key(key) == value)
+        elif search_type == "full_text":
+            results = self.client.search(FullText(value))
+        elif search_type == "regex":
+            results = self.client.search(Regex(key, pattern=value))
+        else:
+            _logger.debug(f"Unknown search type {search_type}. Returning...")
+            return []
+        return results
+    
+    def on_search(self, key, value, search_type="key_value"):
+        """Tiled search and emit table_changed."""
+        _logger.debug(f"       {search_type = } {key = } {value = }")
+        previous_search_results = self.search_results
+        if search_type == "no_search":
+            self.search_results = None
+        else:
+            self.search_results = self.search(key, value, search_type=search_type)
+            _logger.debug(f"    {len(self.search_results) = }")
+            _logger.debug(f"         {self.search_results = }")
+        if previous_search_results == self.search_results:
+            return
+        else:
+            self.table_changed.emit(self.node_path_parts)
 
     @staticmethod
     def client_from_url(url: str):
