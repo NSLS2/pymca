@@ -283,20 +283,20 @@ class TiledRunSelector(object):
         elif search_type == "regex":
             results = self.client.search(Regex(key, pattern=value))
         else:
-            print(f"Unknown search type {search_type}. Returning...")
+            _logger.debug(f"Unknown search type {search_type}. Returning...")
             return []
         return results
     
     def on_search(self, key, value, search_type="key_value"):
         """Tiled search and emit table_changed."""
-        print(f"       {search_type = } {key = } {value = }")
+        _logger.debug(f"       {search_type = } {key = } {value = }")
         previous_search_results = self.search_results
         if search_type == "no_search":
             self.search_results = None
         else:
             self.search_results = self.search(key, value, search_type=search_type)
-            print(f"    {len(self.search_results) = }")
-            print(f"         {self.search_results = }")
+            _logger.debug(f"    {len(self.search_results) = }")
+            _logger.debug(f"         {self.search_results = }")
         if previous_search_results == self.search_results:
             return
         else:

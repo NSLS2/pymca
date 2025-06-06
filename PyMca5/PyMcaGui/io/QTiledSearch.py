@@ -17,6 +17,9 @@ from PyQt5.QtWidgets import (
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
 
 
+_logger = logging.getLogger(__name__)
+
+
 class QTiledSearchWidget(QWidget):
     def __init__(
         self,
@@ -26,7 +29,7 @@ class QTiledSearchWidget(QWidget):
         **kwargs,
     ) -> None:
         """Initialize."""
-        print("QTiledSearchWidget.__init__()")
+        _logger.debug("QTiledSearchWidget.__init__()")
 
         super().__init__(parent, *args, **kwargs)
         self.model = model
@@ -68,10 +71,10 @@ class QTiledSearchWidget(QWidget):
 
     def _search(self):
         key = self.key_entry.text()
-        print(f"Key: {key}")
+        _logger.debug(f"Key: {key}")
         value = self.value_entry.text()
-        print(f"Value: {value}")
-        print("Searching...")
+        _logger.debug(f"Value: {value}")
+        _logger.debug("Searching...")
         full_text_enabled = self.full_text_checkbox.isChecked()
         regex_enabled = self.regex_checkbox.isChecked()
         # FullText search - full text check and non empty value

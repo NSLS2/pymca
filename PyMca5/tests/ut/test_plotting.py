@@ -42,7 +42,7 @@ def test_selected_items_in_data_channel_table(qtbot: QtBot):
         assert data_channel_table.monSelection == [2]
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Test data has no start doc")
 def test_add_button_gets_plottable_data(
         qtbot: QtBot,
         tiled_client_run_selector_model: TiledRunSelector

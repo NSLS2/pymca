@@ -133,7 +133,7 @@ def test_search_types(
     assert search._search() == search_type
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Test data has no start doc")
 def test_empty_search_results_displays_empty_table(
     qtbot: QtBot, tiled_client_run_selector_model: TiledRunSelector
 ):
@@ -146,7 +146,7 @@ def test_empty_search_results_displays_empty_table(
     ...
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Test data has no start doc")
 def test_invalid_search_displays_entire_catalog(
     qtbot: QtBot, tiled_client_run_selector_model: TiledRunSelector
 ):
@@ -159,7 +159,7 @@ def test_invalid_search_displays_entire_catalog(
     ...
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Test data has no start doc")
 def test_valid_search_displays_search_results(
     qtbot: QtBot, tiled_client_run_selector_model: TiledRunSelector
 ):
