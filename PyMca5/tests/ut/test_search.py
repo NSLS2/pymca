@@ -41,7 +41,7 @@ def test_fulltext_checkbox_disables_key_field(qtbot: QtBot):
         ]
     )
     # full text hint should start invisible
-    assert search.full_text_hint.isVisible() == False
+    assert not search.full_text_hint.isVisible()
 
     search.full_text_checkbox.click()
 
@@ -57,7 +57,7 @@ def test_fulltext_checkbox_disables_key_field(qtbot: QtBot):
         ]
     )
     # full text hint should now be visible
-    assert search.full_text_hint.isVisible() == True
+    assert search.full_text_hint.isVisible()
 
     # Clicking the fulltext checkbox again should set everything back to normal
     search.full_text_checkbox.click()
@@ -74,7 +74,7 @@ def test_fulltext_checkbox_disables_key_field(qtbot: QtBot):
         ]
     )
     # full text hint should be invisible again
-    assert search.full_text_hint.isVisible() == False
+    assert not search.full_text_hint.isVisible()
 
 
 def test_regex_checkbox_disables_fulltext_checkbox(qtbot: QtBot):
@@ -84,15 +84,15 @@ def test_regex_checkbox_disables_fulltext_checkbox(qtbot: QtBot):
     qtbot.addWidget(search)
 
     # on init
-    assert search.full_text_checkbox.isEnabled() == True
+    assert search.full_text_checkbox.isEnabled()
 
     # on checking regex checkbox
     search.regex_checkbox.click()
-    assert search.full_text_checkbox.isEnabled() == False
+    assert not search.full_text_checkbox.isEnabled()
 
     # on unchecking regex checkbox
     search.regex_checkbox.click()
-    assert search.full_text_checkbox.isEnabled() == True
+    assert search.full_text_checkbox.isEnabled()
 
 
 @pytest.mark.parametrize(
@@ -201,7 +201,7 @@ def test_run_selector_search_results(tiled_client: BaseClient):
     """Check model search results updated correctly."""
     model = TiledRunSelector(client=tiled_client)
     # init search_results == None
-    assert model.search_results == None
+    assert model.search_results is None
 
     with patch.object(model, "table_changed") as mock_signal:
         mock_signal.emit = Mock()
@@ -230,5 +230,5 @@ def test_run_selector_search_results(tiled_client: BaseClient):
         # emits table_changed
         mock_signal.emit.reset_mock()
         model.on_search("b", "b", search_type="no_search")
-        assert model.search_results == None
+        assert model.search_results is None
         assert mock_signal.emit.call_count == 1

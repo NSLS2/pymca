@@ -102,12 +102,10 @@ class QTiledSearchWidget(QWidget):
         self.full_text_hint.setVisible(not self.full_text_hint.isVisible())
         self.key_label.setEnabled(not self.key_label.isEnabled())
         self.key_entry.setEnabled(not self.key_entry.isEnabled())
-        # if self.full_text_checkbox.isChecked():
         self._search()
 
     def on_regex_checkbox_checked(self):
         self.full_text_checkbox.setEnabled(not self.full_text_checkbox.isEnabled())
-        # if self.regex_checkbox.isChecked():
         self._search()
 
 
