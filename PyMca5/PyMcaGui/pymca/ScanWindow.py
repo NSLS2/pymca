@@ -467,6 +467,7 @@ class ScanWindow(PlotWindow.PlotWindow):
 
         removelist = []
         for sel in sellist:
+            print(f"From scan window {sel}")
             source = sel['SourceName']
             key = sel['Key']
             if not ("scanselection" in sel):
@@ -475,7 +476,7 @@ class ScanWindow(PlotWindow.PlotWindow):
                 continue
             if not sel["scanselection"]:
                 continue
-            if len(key.split(".")) > 2:
+            if isinstance(key, str) and len(key.split(".")) > 2:
                 continue
 
             legend = sel['legend'] # expected form sourcename + scan key
@@ -486,7 +487,6 @@ class ScanWindow(PlotWindow.PlotWindow):
                             for index in sel['selection']['y']:
                                 removelist.append(legend +" "+\
                                                   sel['selection'][lName][index])
-
         if len(removelist):
             self.removeCurves(removelist)
 

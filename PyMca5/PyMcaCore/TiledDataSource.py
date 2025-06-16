@@ -147,6 +147,8 @@ class TiledDataSource(QSource.QSource):
     def isUpdated(self,key):
         pass
 
+    def get_current_selections(self):
+        pass
 
 def _is_Tiled_Source(sourceName):
     try:
