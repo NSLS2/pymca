@@ -376,9 +376,6 @@ class QSourceSelector(qt.QWidget):
         ddict["sourcelist"] = self.mapCombo[key]
         self.sigSourceSelectorSignal.emit(ddict)
 
-    def get_current_selection(self):
-        pass
-
 def test():
     a = qt.QApplication(sys.argv)
     #new access

@@ -467,7 +467,6 @@ class ScanWindow(PlotWindow.PlotWindow):
 
         removelist = []
         for sel in sellist:
-            print(f"From scan window {sel}")
             source = sel['SourceName']
             key = sel['Key']
             if not ("scanselection" in sel):
@@ -511,13 +510,14 @@ class ScanWindow(PlotWindow.PlotWindow):
 
         doit = False
         for sel in sellist:
+            key = sel['Key']
             if not ("scanselection" in sel):
                 continue
             if sel['scanselection'] == "MCA":
                 continue
             if not sel["scanselection"]:
                 continue
-            if len(sel["Key"].split(".")) > 2:
+            if isinstance(key, str) and len(key.split(".")) > 2:
                 continue
             dataObject = sel['dataobject']
             if dataObject.info["selectiontype"] == "1D":
