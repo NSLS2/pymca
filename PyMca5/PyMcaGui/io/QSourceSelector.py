@@ -156,7 +156,7 @@ class QSourceSelector(qt.QWidget):
         _logger.debug(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")
         self.tiledWidget.model.table_changed.emit(self.tiledWidget.dialog.model.node_path_parts)
 
-        current_catalog = self.tiledWidget.dialog.model.client[self.tiledWidget.dialog.model.selected_catalog_path]
+        current_catalog = self.tiledWidget.dialog.model.client[*self.tiledWidget.dialog.model.selected_catalog_path]
         _logger.debug(f"@@@ {current_catalog = }")
         _logger.debug(f"{current_catalog.uri = }")
         # url = "https://tiled-demo.blueskyproject.io/api"

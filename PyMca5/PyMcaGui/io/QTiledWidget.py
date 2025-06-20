@@ -401,7 +401,7 @@ class QTiledWidget(QWidget):
 
         if self.dialog.model.client is None:
             return
-        self.model.url = self.dialog.model.client[self.dialog.model.selected_catalog_path].uri
+        self.model.url = self.dialog.model.client[*self.dialog.model.selected_catalog_path].uri
 
         _logger.debug(f"{self.model.url = }")
 
