@@ -513,7 +513,7 @@ class QTiledWidget(QWidget):
                         'y': channel_sel['y'],
                         'm': channel_sel['m'],
                         'Channel List': channel_sel['Data Channel List'],
-                        'LabelNames': channel_sel['Data Channel List'],
+                        'LabelNames': channel_sel['Data Channel List'].copy(),
                     },
                     'scanselection': True,
                 }
@@ -562,7 +562,7 @@ class QTiledWidget(QWidget):
                         'y': channel_sel['y'],
                         'm': channel_sel['m'],
                         'Channel List': channel_sel['Data Channel List'],
-                        'LabelNames': channel_sel['Data Channel List'],
+                        'LabelNames': channel_sel['Data Channel List'].copy(),
                     },
                     'scanselection': True,
                 }
