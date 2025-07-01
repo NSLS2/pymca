@@ -475,7 +475,9 @@ class QTiledWidget(QWidget):
                     'selection': {'x': channel_sel['x'],
                                   'y': channel_sel['y'],
                                   'm': channel_sel['m'],
-                                  'Channel List': channel_sel['Data Channel List']},
+                                  'Channel List': channel_sel['Data Channel List'],
+                                  'LabelNames': channel_sel['Data Channel List'].copy(),
+                                  },
                     'scanselection': True,
                     }
                 sel_list.append(sel)
@@ -488,7 +490,105 @@ class QTiledWidget(QWidget):
                 self.sigAddSelection.emit(sel_list)
             else:
                 return sel_list
+            
+    def _on_remove_clicked(self, *, emit=True):
+        """Remove selected plot from ScanWindow."""
+        _logger.debug("QTiledWidget._on_remove_clicked()...")
+            # Get the selected item from the catalog table
+        selected = self.catalog_table.selectedItems()
+        if not selected:
+            return
 
+        # Extract the selected node path
+        item = selected[1]
+        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
+
+        sel_list = []
+
+        # Get the channel selection from the data channel table
+        channel_sel = self.data_channel_table.getChannelSelection()
+        _logger.debug(f'{channel_sel = }')
+        _logger.debug(f'{self.model.node_path_parts = }')
+
+        # Create a selection entry
+        sel = {}
+        if len(channel_sel['Data Channel List']):
+            if len(channel_sel['y']):
+                sel = {
+                    'SourceName': self.data.sourceName,
+                    'SourceType': self.data.sourceType,
+                    'Key': selected_node_path_parts,
+                    'legend': '/'.join(selected_node_path_parts),
+                    'selection': {
+                        'x': channel_sel['x'],
+                        'y': channel_sel['y'],
+                        'm': channel_sel['m'],
+                        'Channel List': channel_sel['Data Channel List'],
+                        'LabelNames': channel_sel['Data Channel List'].copy(),
+                    },
+                    'scanselection': True,
+                }
+                sel_list.append(sel)
+
+        if not sel:
+            _logger.debug("No valid selection to remove.")
+            return
+
+        # Emit the updated list after removal
+        if emit and len(sel_list):
+            self.sigRemoveSelection.emit(sel_list)
+        else:
+            _logger.debug("No selections left after removal.")
+
+    def _on_replace_clicked(self, *, emit=True):
+        """Replace old plots in scan window with selected plots"""
+        _logger.debug("QTiledWidget._on_replace_clicked()...")
+            # Get the selected item from the catalog table
+        selected = self.catalog_table.selectedItems()
+        if not selected:
+            return
+
+        # Extract the selected node path
+        item = selected[1]
+        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
+
+        sel_list = []
+
+        # Get the channel selection from the data channel table
+        channel_sel = self.data_channel_table.getChannelSelection()
+        _logger.debug(f'{channel_sel = }')
+        _logger.debug(f'{self.model.node_path_parts = }')
+
+        # Create a selection entry
+        sel = {}
+        if len(channel_sel['Data Channel List']):
+            if len(channel_sel['y']):
+                sel = {
+                    'SourceName': self.data.sourceName,
+                    'SourceType': self.data.sourceType,
+                    'Key': selected_node_path_parts,
+                    'legend': '/'.join(selected_node_path_parts),
+                    'selection': {
+                        'x': channel_sel['x'],
+                        'y': channel_sel['y'],
+                        'm': channel_sel['m'],
+                        'Channel List': channel_sel['Data Channel List'],
+                        'LabelNames': channel_sel['Data Channel List'].copy(),
+                    },
+                    'scanselection': True,
+                }
+                sel_list.append(sel)
+
+        if not sel:
+            _logger.debug("No valid selection to remove.")
+            return
+
+        # Emit the updated list after replace
+        if emit and len(sel_list):
+            self.sigReplaceSelection.emit(sel_list)
+        else:
+            _logger.debug("No selections left after removal.")
+    
     def connect_model_signals(self) -> None:
         """Connect dialog slots to model signals."""
         _logger.debug("QTiledWidget.connect_model_signals()...")
@@ -538,6 +638,8 @@ class QTiledWidget(QWidget):
         # )
         self.open_button.clicked.connect(self._on_load)
         self.add_button.clicked.connect(self._on_add_clicked)
+        self.remove_button.clicked.connect(self._on_remove_clicked)
+        self.replace_button.clicked.connect(self._on_replace_clicked)
 
 
 # # Command Buttons Connections

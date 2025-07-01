@@ -147,7 +147,6 @@ class TiledDataSource(QSource.QSource):
     def isUpdated(self,key):
         pass
 
-
 def _is_Tiled_Source(sourceName):
     try:
         if (

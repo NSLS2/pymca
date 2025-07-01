@@ -475,7 +475,7 @@ class ScanWindow(PlotWindow.PlotWindow):
                 continue
             if not sel["scanselection"]:
                 continue
-            if len(key.split(".")) > 2:
+            if isinstance(key, str) and len(key.split(".")) > 2:
                 continue
 
             legend = sel['legend'] # expected form sourcename + scan key
@@ -486,7 +486,6 @@ class ScanWindow(PlotWindow.PlotWindow):
                             for index in sel['selection']['y']:
                                 removelist.append(legend +" "+\
                                                   sel['selection'][lName][index])
-
         if len(removelist):
             self.removeCurves(removelist)
 
@@ -511,13 +510,14 @@ class ScanWindow(PlotWindow.PlotWindow):
 
         doit = False
         for sel in sellist:
+            key = sel['Key']
             if not ("scanselection" in sel):
                 continue
             if sel['scanselection'] == "MCA":
                 continue
             if not sel["scanselection"]:
                 continue
-            if len(sel["Key"].split(".")) > 2:
+            if isinstance(key, str) and len(key.split(".")) > 2:
                 continue
             dataObject = sel['dataobject']
             if dataObject.info["selectiontype"] == "1D":
