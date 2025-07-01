@@ -465,7 +465,7 @@ class QTiledWidget(QWidget):
                                   'y': channel_sel['y'],
                                   'm': channel_sel['m'],
                                   'Channel List': channel_sel['Data Channel List'],
-                                  'LabelNames': channel_sel['Data Channel List'],
+                                  'LabelNames': channel_sel['Data Channel List'].copy(),
                                   },
                     'scanselection': True,
                     }
@@ -604,7 +604,6 @@ class QTiledWidget(QWidget):
             self._rebuild_current_path_layout()
 
         self.model.url_changed.connect(self.model.on_url_changed)
-
 
     def connect_model_slots(self) -> None:
         """Connect model slots to dialog signals."""
