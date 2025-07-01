@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, Mapping, Optional, Tuple
 
-from PyQt5.QtCore import QThread, QTimer
+from PyQt5.QtCore import QThreadPool, QTimer
 from PyQt5.QtWidgets import (
     QCheckBox,
     QGridLayout,
@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
 )
 
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
-from PyMca5.PyMcaGui.io.TiledSearchWorker import TiledSearchWorker
+from PyMca5.PyMcaGui.io.TiledSearchWorker import TiledSearchRunnable
 
 
 _logger = logging.getLogger(__name__)
@@ -35,8 +35,7 @@ class QTiledSearchWidget(QWidget):
         super().__init__(parent, *args, **kwargs)
         self.model = model
 
-        self.search_thread = QThread()
-        self.search_worker = TiledSearchWorker()
+        self.thread_pool = QThreadPool.globalInstance()
 
         self.key_label = QLabel("Key")
         self.key_entry = QLineEdit()
@@ -94,21 +93,14 @@ class QTiledSearchWidget(QWidget):
         # every other combo should not search
         else:
             search_type = "no_search"
-            self.model.search_results = None
-            # return search_type
-            # return
-        self.search_worker.moveToThread(self.search_thread)
-        self.search_worker.finished.connect(self.search_thread.quit)
-        self.search_worker.search_results.connect(self.on_search_results)
-        self.search_thread.started.connect(lambda: self.search_worker.search(self.model.client, key, value, search_type))
-        # self.model.on_search(key, value, search_type)
-        # self.search_thread.finished.connect()
-        self.search_thread.start()
-        # return search_type
-
+        runnable = TiledSearchRunnable(client=self.model.client, key=key, value=value, search_type=search_type)
+        runnable.signals.search_results.connect(self.on_search_results)
+        self.thread_pool.start(runnable)
+        return search_type
+    
     def on_search_results(self, results):
-        print("on_search_results")
-        print(f"        {results = }")
+        _logger.debug("on_search_results")
+        _logger.debug(f"        {results = }")
         self.model.search_results = results
         self.model.table_changed.emit(self.model.node_path_parts)
 
