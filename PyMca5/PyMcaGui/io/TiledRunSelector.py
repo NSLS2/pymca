@@ -116,6 +116,14 @@ class TiledRunSelector(object):
     @property
     def rows_per_page(self):
         return self._rows_per_page_options[self._rows_per_page_index]
+    
+    @property
+    def node_len(self):
+        """Convenience function for returning total length of node/search result."""
+        if self.search_results is None:
+            return len(self.client)
+        else:
+            return len(self.search_results)
 
     def connect_client(self) -> None:
         """Connect the model's Tiled client to the Tiled server at URL.
@@ -206,32 +214,35 @@ class TiledRunSelector(object):
         rows_per_page = self.rows_per_page
         if (
             self._current_page * rows_per_page
-        ) + rows_per_page < len(self.get_current_node()):
+        ) + rows_per_page < self.node_len:
             self._current_page += 1
             self.table_changed.emit(self.node_path_parts)
 
     def on_last_page_clicked(self):
         # NOTE: math.ceil gives the wrong answer for really large numbers
         # Solution 4 in this answer: https://stackoverflow.com/a/54585138
-        self._current_page = ceil(len(self.get_current_node()) / self.rows_per_page) - 1
+        self._current_page = ceil(self.node_len / self.rows_per_page) - 1
         self.table_changed.emit(self.node_path_parts)
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""
-        return self.get_node(self.node_path_parts)
+        node_offset = self.rows_per_page * self._current_page
+        return self.get_node(self.node_path_parts, node_offset)
 
     @functools.lru_cache(maxsize=1)
-    def get_node(self, node_path_parts: Tuple[str]) -> BaseClient:
-        """Fetch a Tiled client corresponding to the node path."""
+    def get_node(self, node_path_parts: Tuple[str], node_offset: int) -> List:
+        """Fetch a chunk of Tiled data corresponding to the node path."""
+        # TODO: I think this is what should be going in the thread
+
         # NOTE: Passing tiled a tuple returns a list of bluesky runs
         # even if there is only one item in the tuple
         # This may change in the future when the capability to pass a list
         # of uids to tiled is removed
         if node_path_parts:
-            return self.client[node_path_parts[0]]
+            return self.client[node_path_parts[0]].items()[node_offset: node_offset + self.rows_per_page]
         
         # An empty tuple indicates the root node
-        return self.client
+        return self.client.items()[node_offset: node_offset + self.rows_per_page]
 
     def enter_node(self, child_node_path: str) -> None:
         """Select a child node within the current Tiled node.

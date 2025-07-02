@@ -102,6 +102,8 @@ class QTiledSearchWidget(QWidget):
         _logger.debug("on_search_results")
         _logger.debug(f"        {results = }")
         self.model.search_results = results
+        # Reset current page to 0 so we don't end up at an impossible index
+        self.model._current_page = 0
         self.model.table_changed.emit(self.model.node_path_parts)
 
     def debounced_search(self):

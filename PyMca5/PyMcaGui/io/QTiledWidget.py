@@ -220,15 +220,11 @@ class QTiledWidget(QWidget):
     def _set_current_location_label(self):
         _logger.debug(f"                                      {len(self.model.get_current_node())}")
         starting_index = self.model._current_page * self.model.rows_per_page + 1
-        if self.model.search_results is not None:
-            catalog_or_search_results = self.model.search_results
-        else:
-            catalog_or_search_results = self.model.get_current_node()
         ending_index = min(
             self.model.rows_per_page * (self.model._current_page + 1),
-            len(catalog_or_search_results),
+            self.model.node_len,
         )
-        current_location_text = f"{starting_index}-{ending_index} of {len(catalog_or_search_results)}"
+        current_location_text = f"{starting_index}-{ending_index} of {self.model.node_len}"
         _logger.debug(f"         Before setText              {self.current_location_label.text()}")
         self.current_location_label.setText(current_location_text)
         _logger.debug(f"         After setText               {self.current_location_label.text()}")
@@ -260,12 +256,12 @@ class QTiledWidget(QWidget):
             self.catalog_table.insertRow(last_row_position)
         node_offset = rows_per_page * self.model._current_page
         if self.model.search_results is not None:
-            catalog_or_search_results = self.model.search_results
+            catalog_or_search_results = self.model.search_results.items()[
+                node_offset: node_offset + rows_per_page
+            ]
         else:
             catalog_or_search_results = self.model.get_current_node()
-        items = catalog_or_search_results.items()[
-            node_offset: node_offset + rows_per_page
-        ]
+        items = catalog_or_search_results
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.model.node_path_parts else 0
         for row_index, (key, value) in zip(

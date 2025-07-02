@@ -20,6 +20,8 @@ class TiledSearchRunnable(QRunnable):
         self.run_kwargs = kwargs
 
     def run(self):
+        # TODO: search is not I/O bound
+        # This should be where we pull the data from Tiled
         if self.run_kwargs["search_type"] == "key_value":
             results = self.run_kwargs["client"].search(Key(self.run_kwargs["key"]) == self.run_kwargs["value"])
         elif self.run_kwargs["search_type"] == "full_text":
