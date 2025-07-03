@@ -173,13 +173,20 @@ class TiledRunSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node = self.get_node(node_path_parts)
+        node_offset = self.rows_per_page * self._current_page
+        node = self.get_node(node_path_parts, node_offset)
         # Don't update model.node_path_parts here
         # If model.node_path_parts gets updated here, the navigation
         # buttons think we are inside the run
 
         self.open_button_enabled = True
 
+        if len(node) > 1:
+            return
+        else:
+            # node returned from get_node is a list of tuples (uid, bluesky run)
+            # index in to the node to get the bluesky run
+            node = node[0][1]
         attrs = node.item["attributes"]        
         family = attrs["structure_family"]
         metadata = json.dumps(attrs["metadata"], indent=2, default=json_decode)
