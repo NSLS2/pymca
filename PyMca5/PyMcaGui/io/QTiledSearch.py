@@ -1,21 +1,16 @@
 import logging
-from typing import Callable, Mapping, Optional, Tuple
+from typing import Optional
 
-from PyQt5.QtCore import QThreadPool, QTimer
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QCheckBox,
     QGridLayout,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
-    QTextEdit,
-    QVBoxLayout,
     QWidget,
 )
 
 from PyMca5.PyMcaGui.io.TiledRunSelector import TiledRunSelector
-from PyMca5.PyMcaGui.io.TiledSearchWorker import TiledSearchRunnable
 
 
 _logger = logging.getLogger(__name__)
@@ -34,8 +29,6 @@ class QTiledSearchWidget(QWidget):
 
         super().__init__(parent, *args, **kwargs)
         self.model = model
-
-        self.thread_pool = QThreadPool.globalInstance()
 
         self.key_label = QLabel("Key")
         self.key_entry = QLineEdit()
@@ -93,18 +86,8 @@ class QTiledSearchWidget(QWidget):
         # every other combo should not search
         else:
             search_type = "no_search"
-        runnable = TiledSearchRunnable(client=self.model.client, key=key, value=value, search_type=search_type)
-        runnable.signals.search_results.connect(self.on_search_results)
-        self.thread_pool.start(runnable)
+        self.model.search(key, value, search_type)
         return search_type
-    
-    def on_search_results(self, results):
-        _logger.debug("on_search_results")
-        _logger.debug(f"        {results = }")
-        self.model.search_results = results
-        # Reset current page to 0 so we don't end up at an impossible index
-        self.model._current_page = 0
-        self.model.table_changed.emit(self.model.node_path_parts)
 
     def debounced_search(self):
         self._search()

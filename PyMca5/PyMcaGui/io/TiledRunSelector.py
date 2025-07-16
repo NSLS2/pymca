@@ -174,19 +174,13 @@ class TiledRunSelector(object):
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
         node_offset = self.rows_per_page * self._current_page
-        node = self.get_node(node_path_parts, node_offset)
+        node = self.get_run(node_path_parts)
         # Don't update model.node_path_parts here
         # If model.node_path_parts gets updated here, the navigation
         # buttons think we are inside the run
 
         self.open_button_enabled = True
 
-        if len(node) > 1:
-            return
-        else:
-            # node returned from get_node is a list of tuples (uid, bluesky run)
-            # index in to the node to get the bluesky run
-            node = node[0][1]
         attrs = node.item["attributes"]        
         family = attrs["structure_family"]
         metadata = json.dumps(attrs["metadata"], indent=2, default=json_decode)
@@ -239,17 +233,28 @@ class TiledRunSelector(object):
     @functools.lru_cache(maxsize=1)
     def get_node(self, node_path_parts: Tuple[str], node_offset: int) -> List:
         """Fetch a chunk of Tiled data corresponding to the node path."""
-        # TODO: I think this is what should be going in the thread
-
         # NOTE: Passing tiled a tuple returns a list of bluesky runs
         # even if there is only one item in the tuple
         # This may change in the future when the capability to pass a list
         # of uids to tiled is removed
         if node_path_parts:
-            return self.client[node_path_parts[0]].items()[node_offset: node_offset + self.rows_per_page]
+            return self.client[node_path_parts[0]].values()[node_offset: node_offset + self.rows_per_page]
+
+        # An empty tuple indicates the root node
+        return self.client.values()[node_offset: node_offset + self.rows_per_page]
+
+    @functools.lru_cache(maxsize=1)
+    def get_run(self, node_path_parts: Tuple[str]) -> List:
+        """Fetch a BlueskyRun from Tiled corresponding to the node path."""
+        # NOTE: Passing tiled a tuple returns a list of bluesky runs
+        # even if there is only one item in the tuple
+        # This may change in the future when the capability to pass a list
+        # of uids to tiled is removed
+        if node_path_parts:
+            return self.client[node_path_parts[0]]
         
         # An empty tuple indicates the root node
-        return self.client.items()[node_offset: node_offset + self.rows_per_page]
+        return self.client
 
     def enter_node(self, child_node_path: str) -> None:
         """Select a child node within the current Tiled node.
@@ -302,27 +307,14 @@ class TiledRunSelector(object):
             results = self.client.search(Regex(key, pattern=value))
         else:
             _logger.debug(f"Unknown search type {search_type}. Returning...")
-            return []
-        return results
-    
-    def on_search(self, key, value, search_type="key_value"):
-        """Tiled search and emit table_changed."""
-        _logger.debug(f"       {search_type = } {key = } {value = }")
-        previous_search_results = self.search_results
-        if search_type == "no_search":
-            self.search_results = None
-        else:
-            self.search_results = self.search(key, value, search_type=search_type)
-            _logger.debug(f"    {len(self.search_results) = }")
-            _logger.debug(f"         {self.search_results = }")
-        if previous_search_results == self.search_results:
-            return
-        else:
-            self.table_changed.emit(self.node_path_parts)
+            results = None
+        self.search_results = results
+        self.table_changed.emit(self.node_path_parts)
 
     @staticmethod
     def client_from_url(url: str):
         """Create a Tiled client that is connected to the requested URL."""
         _logger.debug("TiledRunSelector.client_from_url()...")
-
-        return from_uri(url)
+        # sort the catalog to show most recent scans first
+        # time here refers to start.time
+        return from_uri(url).sort(("time", -1))
