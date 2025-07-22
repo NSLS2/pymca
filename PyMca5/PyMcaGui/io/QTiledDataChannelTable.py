@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.SpecFileCntTable import CheckBoxItem
 
+
 class QTiledDataChannelTable(qt.QTableWidget):
     """
     Creates the data channel table (second table) inside the QTiledWidget.
@@ -19,7 +20,6 @@ class QTiledDataChannelTable(qt.QTableWidget):
         
     def format_table(self):
         """Sets the column headers and the size of the columns for the table."""
-        
         # Column Labels
         labels = ['Data Channel', 'x', 'y', 'Mon']
         self.setColumnCount(len(labels))
@@ -60,6 +60,8 @@ class QTiledDataChannelTable(qt.QTableWidget):
         if n > 0:
             for (i, channelLabel) in enumerate(channelList):
                 self._addLine(i, channelLabel)
+        self.horizontalHeader().setSectionResizeMode(qt.QHeaderView.ResizeMode.ResizeToContents)
+        self.horizontalHeader().setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Stretch)
 
     def _addLine(self, i, channelLabel):
         """
