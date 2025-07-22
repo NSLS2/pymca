@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Callable, Mapping, Optional, Tuple
 
 from datetime import datetime
@@ -10,6 +11,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QThreadPool
 from tiled.structures.core import StructureFamily
+from tiled.client import from_profile
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
@@ -35,7 +37,15 @@ class QTiledWidget(QWidget):
     def __init__(self, model=None, dialog_model=None):
         super().__init__()
         if dialog_model is None:
-            dialog_model = TiledCatalogSelector()
+            profile = os.environ.get('TILED_PROFILE', 'nsls2')
+
+            if profile == 'nsls2':
+                url = "https://tiled.nsls2.bnl.gov/api"
+            else:
+                url = f"https://tiled.nsls2.bnl.gov/api/v1/metadata/{profile}"
+
+            dialog_model = TiledCatalogSelector(url)
+
         self.dialog = QTiledCatalogSelectorDialog(model=dialog_model)
 
         if model is None:
