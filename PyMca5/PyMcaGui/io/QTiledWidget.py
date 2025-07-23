@@ -358,7 +358,7 @@ class QTiledWidget(QWidget):
 
     def populate_data_channel_table(self, child_node):
         # For now, always select data from the primary stream
-        # TODO
+        # TODO: make stream configurable here
         channel_list = self.model.client[child_node]["primary", "data"].keys()
         
         self.data_channel_table.clear_table()
