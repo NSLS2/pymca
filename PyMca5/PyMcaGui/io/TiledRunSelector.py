@@ -17,6 +17,8 @@ from tiled.queries import FullText, Key, Regex
 
 _logger = logging.getLogger(__name__)
 
+DESCENDING = -1
+
 
 def json_decode(obj):
     if isinstance(obj, (datetime, date)):
@@ -173,7 +175,6 @@ class TiledRunSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node_offset = self.rows_per_page * self._current_page
         node = self.get_run(node_path_parts)
         # Don't update model.node_path_parts here
         # If model.node_path_parts gets updated here, the navigation
@@ -317,4 +318,4 @@ class TiledRunSelector(object):
         _logger.debug("TiledRunSelector.client_from_url()...")
         # sort the catalog to show most recent scans first
         # time here refers to start.time
-        return from_uri(url).sort(("time", -1))
+        return from_uri(url).sort(("time", DESCENDING))
