@@ -30,10 +30,9 @@ class QTiledDataChannelTable(qt.QTableWidget):
             item.setText(labels[i])
             self.setHorizontalHeaderItem(i, item)
 
-        # Strech Columns to fill table
-        self.horizontalHeader().setStretchLastSection(True)
-        for column in range(self.columnCount()):
-            self.horizontalHeader().setSectionResizeMode(column, QtWidgets.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(qt.QHeaderView.ResizeMode.ResizeToContents)
+        self.horizontalHeader().setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Stretch)
+        self.horizontalHeader().setStretchLastSection(False)
 
     def clear_table(self):
         """Clears the table if a different scan is selected."""
@@ -60,9 +59,6 @@ class QTiledDataChannelTable(qt.QTableWidget):
         if n > 0:
             for (i, channelLabel) in enumerate(channelList):
                 self._addLine(i, channelLabel)
-        self.horizontalHeader().setSectionResizeMode(qt.QHeaderView.ResizeMode.ResizeToContents)
-        self.horizontalHeader().setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Stretch)
-        self.horizontalHeader().setStretchLastSection(False)
 
     def _addLine(self, i, channelLabel):
         """
@@ -88,15 +84,6 @@ class QTiledDataChannelTable(qt.QTableWidget):
                 widget = CheckBoxItem(self, i, j)
                 self.setCellWidget(i, j, widget)
                 widget.sigCheckBoxItemSignal.connect(self._mySlot)
-
-            # Resize columns to fit contents
-        self.resizeColumnsToContents()
-
-        # Stretch Columns to fill the table
-        column_count = self.columnCount()
-        for column in range(column_count):
-            self.horizontalHeader().setStretchLastSection(True)
-            self.horizontalHeader().setSectionResizeMode(column, QtWidgets.QHeaderView.Stretch)
 
     def _mySlot(self, ddict):
         row = ddict["row"]
