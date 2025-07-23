@@ -62,6 +62,7 @@ class QTiledDataChannelTable(qt.QTableWidget):
                 self._addLine(i, channelLabel)
         self.horizontalHeader().setSectionResizeMode(qt.QHeaderView.ResizeMode.ResizeToContents)
         self.horizontalHeader().setSectionResizeMode(0, qt.QHeaderView.ResizeMode.Stretch)
+        self.horizontalHeader().setStretchLastSection(False)
 
     def _addLine(self, i, channelLabel):
         """
