@@ -1,16 +1,12 @@
 import logging
-from typing import Callable, Mapping, Optional, Tuple
+from typing import Optional
 
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QCheckBox,
     QGridLayout,
-    QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
-    QTextEdit,
-    QVBoxLayout,
     QWidget,
 )
 
@@ -90,8 +86,7 @@ class QTiledSearchWidget(QWidget):
         # every other combo should not search
         else:
             search_type = "no_search"
-            return search_type
-        self.model.on_search(key, value, search_type)
+        self.model.search(key, value, search_type)
         return search_type
 
     def debounced_search(self):

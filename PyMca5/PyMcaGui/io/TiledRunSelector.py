@@ -17,6 +17,8 @@ from tiled.queries import FullText, Key, Regex
 
 _logger = logging.getLogger(__name__)
 
+DESCENDING = -1
+
 
 def json_decode(obj):
     if isinstance(obj, (datetime, date)):
@@ -116,6 +118,14 @@ class TiledRunSelector(object):
     @property
     def rows_per_page(self):
         return self._rows_per_page_options[self._rows_per_page_index]
+    
+    @property
+    def node_len(self):
+        """Convenience function for returning total length of node/search result."""
+        if self.search_results is None:
+            return len(self.client)
+        else:
+            return len(self.search_results)
 
     def connect_client(self) -> None:
         """Connect the model's Tiled client to the Tiled server at URL.
@@ -165,7 +175,7 @@ class TiledRunSelector(object):
 
     def on_item_selected(self, child_node_path):
         node_path_parts = self.node_path_parts + (child_node_path,)
-        node = self.get_node(node_path_parts)
+        node = self.get_run(node_path_parts)
         # Don't update model.node_path_parts here
         # If model.node_path_parts gets updated here, the navigation
         # buttons think we are inside the run
@@ -206,23 +216,37 @@ class TiledRunSelector(object):
         rows_per_page = self.rows_per_page
         if (
             self._current_page * rows_per_page
-        ) + rows_per_page < len(self.get_current_node()):
+        ) + rows_per_page < self.node_len:
             self._current_page += 1
             self.table_changed.emit(self.node_path_parts)
 
     def on_last_page_clicked(self):
         # NOTE: math.ceil gives the wrong answer for really large numbers
         # Solution 4 in this answer: https://stackoverflow.com/a/54585138
-        self._current_page = ceil(len(self.get_current_node()) / self.rows_per_page) - 1
+        self._current_page = ceil(self.node_len / self.rows_per_page) - 1
         self.table_changed.emit(self.node_path_parts)
 
     def get_current_node(self) -> BaseClient:
         """Fetch a Tiled client corresponding to the current node path."""
-        return self.get_node(self.node_path_parts)
+        node_offset = self.rows_per_page * self._current_page
+        return self.get_node(self.node_path_parts, node_offset)
 
     @functools.lru_cache(maxsize=1)
-    def get_node(self, node_path_parts: Tuple[str]) -> BaseClient:
-        """Fetch a Tiled client corresponding to the node path."""
+    def get_node(self, node_path_parts: Tuple[str], node_offset: int) -> List:
+        """Fetch a chunk of Tiled data corresponding to the node path."""
+        # NOTE: Passing tiled a tuple returns a list of bluesky runs
+        # even if there is only one item in the tuple
+        # This may change in the future when the capability to pass a list
+        # of uids to tiled is removed
+        if node_path_parts:
+            return self.client[node_path_parts[0]].values()[node_offset: node_offset + self.rows_per_page]
+
+        # An empty tuple indicates the root node
+        return self.client.values()[node_offset: node_offset + self.rows_per_page]
+
+    @functools.lru_cache(maxsize=1)
+    def get_run(self, node_path_parts: Tuple[str]) -> List:
+        """Fetch a BlueskyRun from Tiled corresponding to the node path."""
         # NOTE: Passing tiled a tuple returns a list of bluesky runs
         # even if there is only one item in the tuple
         # This may change in the future when the capability to pass a list
@@ -284,27 +308,14 @@ class TiledRunSelector(object):
             results = self.client.search(Regex(key, pattern=value))
         else:
             _logger.debug(f"Unknown search type {search_type}. Returning...")
-            return []
-        return results
-    
-    def on_search(self, key, value, search_type="key_value"):
-        """Tiled search and emit table_changed."""
-        _logger.debug(f"       {search_type = } {key = } {value = }")
-        previous_search_results = self.search_results
-        if search_type == "no_search":
-            self.search_results = None
-        else:
-            self.search_results = self.search(key, value, search_type=search_type)
-            _logger.debug(f"    {len(self.search_results) = }")
-            _logger.debug(f"         {self.search_results = }")
-        if previous_search_results == self.search_results:
-            return
-        else:
-            self.table_changed.emit(self.node_path_parts)
+            results = None
+        self.search_results = results
+        self.table_changed.emit(self.node_path_parts)
 
     @staticmethod
     def client_from_url(url: str):
         """Create a Tiled client that is connected to the requested URL."""
         _logger.debug("TiledRunSelector.client_from_url()...")
-
-        return from_uri(url)
+        # sort the catalog to show most recent scans first
+        # time here refers to start.time
+        return from_uri(url).sort(("time", DESCENDING))

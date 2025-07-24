@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QSplitter, QStyle, QTableWidget, QTableWidgetItem, QTextEdit,
     QVBoxLayout, QWidget, QHeaderView
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThreadPool
 from tiled.structures.core import StructureFamily
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
@@ -19,6 +19,7 @@ from PyMca5.PyMcaGui.io.QTiledCatalogSelectorDialog import (
     QTiledCatalogSelectorDialog, ClickableQLabel, ClickableIndexedQLabel
 )
 from PyMca5.PyMcaGui.io.QTiledSearch import QTiledSearchWidget
+from PyMca5.PyMcaGui.io.TiledWorker import TiledWorker
 
 
 _logger = logging.getLogger(__name__)
@@ -41,6 +42,8 @@ class QTiledWidget(QWidget):
             self.model = TiledRunSelector()
         else:
             self.model = model
+
+        self.thread_pool = QThreadPool.globalInstance()
 
         self.data = None
 
@@ -164,7 +167,7 @@ class QTiledWidget(QWidget):
         self.splitter.addWidget(self.catalog_table_widget)
         self.splitter.addWidget(self.data_channel_widget)
 
-        self.splitter.setStretchFactor(2, 2)
+        self.splitter.setStretchFactor(3, 2)
 
         layout = QVBoxLayout()
         layout.addWidget(self.select_tiled_catalog)
@@ -218,23 +221,29 @@ class QTiledWidget(QWidget):
         self.rows_per_page_selector.setCurrentIndex(self.model._rows_per_page_index)
 
     def _set_current_location_label(self):
-        _logger.debug(f"                                      {len(self.model.get_current_node())}")
         starting_index = self.model._current_page * self.model.rows_per_page + 1
-        if self.model.search_results is not None:
-            catalog_or_search_results = self.model.search_results
-        else:
-            catalog_or_search_results = self.model.get_current_node()
         ending_index = min(
             self.model.rows_per_page * (self.model._current_page + 1),
-            len(catalog_or_search_results),
+            self.model.node_len,
         )
-        current_location_text = f"{starting_index}-{ending_index} of {len(catalog_or_search_results)}"
+        current_location_text = f"{starting_index}-{ending_index} of {self.model.node_len}"
         _logger.debug(f"         Before setText              {self.current_location_label.text()}")
         self.current_location_label.setText(current_location_text)
         _logger.debug(f"         After setText               {self.current_location_label.text()}")
         self.current_location_label.update()
 
-    def populate_run_table(self):
+    def fetch_table_data(self):
+        runnable = TiledWorker(
+            rows_per_page=self.model.rows_per_page,
+            current_page=self.model._current_page,
+            client=self.model.client,
+            search_results=self.model.search_results,
+            node_path_parts=self.model.node_path_parts
+        )
+        runnable.signals.results.connect(self.populate_run_table)
+        self.thread_pool.start(runnable)
+
+    def populate_run_table(self, results):
         original_state = {}
         # TODO: may need if condition if we implement a disconnect button
         self.catalog_table_widget.setVisible(True)
@@ -259,13 +268,8 @@ class QTiledWidget(QWidget):
             last_row_position = self.catalog_table.rowCount()
             self.catalog_table.insertRow(last_row_position)
         node_offset = rows_per_page * self.model._current_page
-        if self.model.search_results is not None:
-            catalog_or_search_results = self.model.search_results
-        else:
-            catalog_or_search_results = self.model.get_current_node()
-        items = catalog_or_search_results.items()[
-            node_offset: node_offset + rows_per_page
-        ]
+
+        items = results
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.model.node_path_parts else 0
         for row_index, (key, value) in zip(
@@ -354,6 +358,7 @@ class QTiledWidget(QWidget):
 
     def populate_data_channel_table(self, child_node):
         # For now, always select data from the primary stream
+        # TODO: make stream configurable here
         channel_list = self.model.client[child_node]["primary", "data"].keys()
         
         self.data_channel_table.clear_table()
@@ -611,7 +616,7 @@ class QTiledWidget(QWidget):
                 # TODO: handle disconnecting from tiled client later
                 return
             self._set_current_location_label()
-            self.populate_run_table()
+            self.fetch_table_data()
             self._rebuild_current_path_layout()
 
         self.model.url_changed.connect(self.model.on_url_changed)
