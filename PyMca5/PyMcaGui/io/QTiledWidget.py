@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QThreadPool
 from tiled.structures.core import StructureFamily
-from tiled.client import from_profile
+from tiled.profiles import load_profiles
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
@@ -39,10 +39,9 @@ class QTiledWidget(QWidget):
         if dialog_model is None:
             profile = os.environ.get('TILED_PROFILE', 'nsls2')
 
-            if profile == 'nsls2':
-                url = "https://tiled.nsls2.bnl.gov/api"
-            else:
-                url = f"https://tiled.nsls2.bnl.gov/api/v1/metadata/{profile}"
+            profiles = load_profiles()
+            _, profile_details = profiles.get(profile, (None, {}))
+            url = profile_details.get('uri')
 
             dialog_model = TiledCatalogSelector(url)
 
