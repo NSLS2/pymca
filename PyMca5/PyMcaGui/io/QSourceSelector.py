@@ -33,6 +33,7 @@ import logging
 import time as ttime
 _logger = logging.getLogger(__name__)
 
+from tiled.profiles import load_profiles
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 QTVERSION = qt.qVersion()
@@ -149,20 +150,26 @@ class QSourceSelector(qt.QWidget):
         self.mainLayout.addWidget(self.fileWidget)
 
     def tiledConnection(self):
-        self.tiledWidget = QTiledWidget()
-        self.tiledWidget.show_dialog()
-        if self.tiledWidget.dialog.model.client is None:
-            return
-        _logger.debug(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")
-        self.tiledWidget.model.table_changed.emit(self.tiledWidget.dialog.model.node_path_parts)
+        profile = os.environ.get("TILED_PROFILE", "")
 
-        current_catalog = self.tiledWidget.dialog.model.client[*self.tiledWidget.dialog.model.selected_catalog_path]
-        _logger.debug(f"@@@ {current_catalog = }")
-        _logger.debug(f"{current_catalog.uri = }")
-        # url = "https://tiled-demo.blueskyproject.io/api"
+        profiles = load_profiles()
+        _, profile_details = profiles.get(profile, (None, {}))
+        url = profile_details.get("uri", "")
+        self.tiledWidget = QTiledWidget(url=url)
+        if not url:
+            self.tiledWidget.show_dialog()
+            if self.tiledWidget.dialog.model.client is None:
+                return
+            _logger.debug(f"*** {self.tiledWidget.dialog.model.node_path_parts = }")
+            self.tiledWidget.model.table_changed.emit(self.tiledWidget.dialog.model.node_path_parts)
+
+            current_catalog = self.tiledWidget.dialog.model.client[*self.tiledWidget.dialog.model.selected_catalog_path]
+            _logger.debug(f"@@@ {current_catalog = }")
+            _logger.debug(f"{current_catalog.uri = }")
+            url = current_catalog.uri
         ddict = {
             "event": "NewSourceSelected",
-            "sourcelist": current_catalog.uri,
+            "sourcelist": url,
         }
         # pass info from dialog through
         self.sigSourceSelectorSignal.emit(ddict)

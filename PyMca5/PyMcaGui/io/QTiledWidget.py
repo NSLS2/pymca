@@ -32,10 +32,11 @@ class QTiledWidget(QWidget):
     sigReplaceSelection = qt.pyqtSignal(object)
     sigOtherSignals = qt.pyqtSignal(object)
 
-    def __init__(self, model=None, dialog_model=None):
+    def __init__(self, model=None, dialog_model=None, url=""):
         super().__init__()
         if dialog_model is None:
-            dialog_model = TiledCatalogSelector()
+            dialog_model = TiledCatalogSelector(url=url)
+
         self.dialog = QTiledCatalogSelectorDialog(model=dialog_model)
 
         if model is None:
