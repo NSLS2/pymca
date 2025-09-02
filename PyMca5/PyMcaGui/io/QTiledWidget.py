@@ -11,7 +11,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QThreadPool
 from tiled.structures.core import StructureFamily
-from tiled.profiles import load_profiles
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
 from PyMca5.PyMcaGui.io.TiledCatalogSelector import TiledCatalogSelector
@@ -34,16 +33,10 @@ class QTiledWidget(QWidget):
     sigReplaceSelection = qt.pyqtSignal(object)
     sigOtherSignals = qt.pyqtSignal(object)
 
-    def __init__(self, model=None, dialog_model=None):
+    def __init__(self, model=None, dialog_model=None, url=""):
         super().__init__()
         if dialog_model is None:
-            profile = os.environ.get('TILED_PROFILE', 'nsls2')
-
-            profiles = load_profiles()
-            _, profile_details = profiles.get(profile, (None, {}))
-            url = profile_details.get('uri')
-
-            dialog_model = TiledCatalogSelector(url)
+            dialog_model = TiledCatalogSelector(url=url)
 
         self.dialog = QTiledCatalogSelectorDialog(model=dialog_model)
 
