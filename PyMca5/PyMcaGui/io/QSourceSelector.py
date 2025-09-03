@@ -33,6 +33,7 @@ import logging
 import time as ttime
 _logger = logging.getLogger(__name__)
 
+from tiled.client import from_uri
 from tiled.profiles import load_profiles
 
 from PyMca5.PyMcaGui import PyMcaQt as qt
@@ -149,6 +150,22 @@ class QSourceSelector(qt.QWidget):
             fileWidgetLayout.addWidget(self.pluginsButton)
         self.mainLayout.addWidget(self.fileWidget)
 
+    def url_is_catalog_of_bluesky_runs(self, url):
+        try:
+            client = from_uri(url)
+        except Exception as exception:
+            error_message = str(exception)
+            _logger.warning(error_message)
+            return False
+
+        specs = client.item["attributes"]["specs"]
+        for spec in specs:
+            if spec["name"] == "CatalogOfBlueskyRuns":
+                return True
+            else:
+                pass
+        return False
+
     def tiledConnection(self):
         profile = os.environ.get("TILED_PROFILE", "")
         default_url = os.environ.get("TILED_DEFAULT_URL", "")
@@ -156,8 +173,11 @@ class QSourceSelector(qt.QWidget):
         profiles = load_profiles()
         _, profile_details = profiles.get(profile, (None, {}))
         url = profile_details.get("uri", default_url)
+        _logger.debug(f"Will attempt to connect to Tiled at {url = }")
+
         self.tiledWidget = QTiledWidget(url=url)
-        if not url:
+        
+        if not url or not self.url_is_catalog_of_bluesky_runs(url):
             self.tiledWidget.show_dialog()
             if self.tiledWidget.dialog.model.client is None:
                 return
