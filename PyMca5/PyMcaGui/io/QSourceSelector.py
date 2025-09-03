@@ -151,10 +151,11 @@ class QSourceSelector(qt.QWidget):
 
     def tiledConnection(self):
         profile = os.environ.get("TILED_PROFILE", "")
+        default_url = os.environ.get("TILED_DEFAULT_URL", "")
 
         profiles = load_profiles()
         _, profile_details = profiles.get(profile, (None, {}))
-        url = profile_details.get("uri", "")
+        url = profile_details.get("uri", default_url)
         self.tiledWidget = QTiledWidget(url=url)
         if not url:
             self.tiledWidget.show_dialog()
