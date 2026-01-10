@@ -397,7 +397,8 @@ class QTiledWidget(QWidget):
         if item is self.catalog_breadcrumbs:
             self.model.exit_node()
             return
-        self.model.open_node(item.text())
+        run_uid = item.data(Qt.UserRole)  # Full UID, not displayed text
+        self.model.open_node(run_uid)
         self.open_button.setEnabled(False)
 
     def _on_load(self):
@@ -405,8 +406,9 @@ class QTiledWidget(QWidget):
         if not selected:
             return
         item = selected[1]
-        self.model.open_run(item.text())
-        self.populate_data_channel_table(item.text())
+        run_uid = item.data(Qt.UserRole)  # Full UID, not displayed text
+        self.model.open_run(run_uid)
+        self.populate_data_channel_table(run_uid)
 
     def _on_breadcrumb_clicked(self, node_index):
         self.model.jump_to_node(node_index)
@@ -469,7 +471,8 @@ class QTiledWidget(QWidget):
         if not selected:
             return
         item = selected[1]
-        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
+        run_uid = item.data(Qt.UserRole)  # Full UID, not displayed text
+        selected_node_path_parts = self.model.node_path_parts + (run_uid,)
         sel_list = []
         channel_sel  = self.data_channel_table.getChannelSelection()
         _logger.debug(f'{channel_sel = }')
@@ -510,7 +513,8 @@ class QTiledWidget(QWidget):
 
         # Extract the selected node path
         item = selected[1]
-        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
+        run_uid = item.data(Qt.UserRole)  # Full UID, not displayed text
+        selected_node_path_parts = self.model.node_path_parts + (run_uid,)
 
         sel_list = []
 
@@ -559,7 +563,8 @@ class QTiledWidget(QWidget):
 
         # Extract the selected node path
         item = selected[1]
-        selected_node_path_parts = self.model.node_path_parts + (item.text(),)
+        run_uid = item.data(Qt.UserRole)  # Full UID, not displayed text
+        selected_node_path_parts = self.model.node_path_parts + (run_uid,)
 
         sel_list = []
 
