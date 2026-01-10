@@ -273,10 +273,10 @@ class QTiledWidget(QWidget):
         items = results
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.model.node_path_parts else 0
-        for row_index, (key, value) in zip(
+        for row_index, (run_uid, run_info) in zip(
             range(start, self.catalog_table.rowCount()), items
         ):
-            start_doc = value.start
+            start_doc = run_info.start
             scan_id = start_doc.get("scan_id")
             plan_name = start_doc.get("plan_name")
             start_time = start_doc.get("start_datetime")
@@ -284,7 +284,7 @@ class QTiledWidget(QWidget):
                 start_time = datetime.fromtimestamp(start_doc.get("time")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
             else:
                 start_time = datetime.fromisoformat(start_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            stop_doc = value.stop
+            stop_doc = run_info.stop
             if stop_doc is None:
                 stop_doc = {}
             exit_status = stop_doc.get("exit_status")
@@ -298,7 +298,7 @@ class QTiledWidget(QWidget):
             else:
                 stop_time = datetime.fromtimestamp(stop_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
-            family = value.item["attributes"]["structure_family"]
+            family = run_info.item["attributes"]["structure_family"]
 
             if family == StructureFamily.container:
                 # Change the icon for BlueskyRuns so it doesn't look like
@@ -318,9 +318,12 @@ class QTiledWidget(QWidget):
             self.catalog_table.setItem(
                 row_index, 0, QTableWidgetItem(icon, str(scan_id))
             )
-            # first 8 chars of uid
+            # Bluesky run UID
+            uid_item = QTableWidgetItem()
+            uid_item.setData(Qt.UserRole, run_uid)  # Store the full UID
+            uid_item.setData(Qt.DisplayRole, run_uid[:8])  # Partial UID
             self.catalog_table.setItem(
-                row_index, 1, QTableWidgetItem(key[:8])
+                row_index, 1, uid_item
             )
             # plan_name
             self.catalog_table.setItem(
@@ -377,7 +380,7 @@ class QTiledWidget(QWidget):
             self._clear_metadata()
             return
         # selected[0] is scan_id
-        # selected[1] is partial uid
+        # selected[1] is the run uid
         item = selected[1]
         child_node_path = item.text()
         model.on_item_selected(child_node_path)
