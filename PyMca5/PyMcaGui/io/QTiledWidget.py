@@ -318,9 +318,12 @@ class QTiledWidget(QWidget):
             self.catalog_table.setItem(
                 row_index, 0, QTableWidgetItem(icon, str(scan_id))
             )
-            # first 8 chars of uid
+            # Bluesky run UID
+            uid_item = QTableWidgetItem()
+            uid_item.setData(Qt.UserRole, run_uid)  # Store the full UID
+            uid_item.setData(Qt.DisplayRole, run_uid[:8])  # Partial UID
             self.catalog_table.setItem(
-                row_index, 1, QTableWidgetItem(run_uid)
+                row_index, 1, uid_item
             )
             # plan_name
             self.catalog_table.setItem(
