@@ -382,7 +382,7 @@ class QTiledWidget(QWidget):
         # selected[0] is scan_id
         # selected[1] is the run uid
         item = selected[1]
-        child_node_path = item.text()
+        child_node_path = item.data(Qt.UserRole)  # Full UID, not displayed text
         model.on_item_selected(child_node_path)
 
         self.info_box.setText(model.info_text)
