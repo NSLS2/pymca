@@ -368,12 +368,11 @@ class QTiledWidget(QWidget):
         # For now, always select data from the primary stream
         # TODO: make stream configurable here
         run_container = self.model.client[child_node]
-        if self.model.is_bluesky_run(run_container):
+        try:
             # Backward compatibility with MongoDB data structure
-            run_container = run_container.v2
-            channel_list = run_container["primary", "data"].keys()
-        else:
-            raise ValueError(f"{child_node} is not a Bluesky run.")
+            channel_list = run_container.v2["primary", "data"].keys()
+        except KeyError as e:
+            raise ValueError(f"{child_node} is not a Bluesky run.") from e
         
         self.data_channel_table.clear_table()
         self.data_channel_table.build_table(channel_list)
