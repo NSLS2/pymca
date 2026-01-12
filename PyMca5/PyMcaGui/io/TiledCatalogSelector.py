@@ -189,8 +189,6 @@ class TiledCatalogSelector(object):
         for spec in specs:
             if spec["name"] == "CatalogOfBlueskyRuns":
                 return True
-            else:
-                pass
         return False
 
     def on_item_selected(self, child_node_path):

@@ -273,10 +273,14 @@ class QTiledWidget(QWidget):
         items = results
         # Loop over rows, filling in keys until we run out of keys.
         start = 1 if self.model.node_path_parts else 0
-        for row_index, (run_uid, run_info) in zip(
+        for row_index, (run_uid, run_container) in zip(
             range(start, self.catalog_table.rowCount()), items
         ):
-            start_doc = run_info.start
+            if self.model.is_bluesky_run(run_container):
+                # Backward compatibility with MongoDB data structure
+                run_container = run_container.v2
+
+            start_doc = run_container.start
             scan_id = start_doc.get("scan_id")
             plan_name = start_doc.get("plan_name")
             start_time = start_doc.get("start_datetime")
@@ -284,7 +288,7 @@ class QTiledWidget(QWidget):
                 start_time = datetime.fromtimestamp(start_doc.get("time")).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
             else:
                 start_time = datetime.fromisoformat(start_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-            stop_doc = run_info.stop
+            stop_doc = run_container.stop
             if stop_doc is None:
                 stop_doc = {}
             exit_status = stop_doc.get("exit_status")
@@ -298,7 +302,7 @@ class QTiledWidget(QWidget):
             else:
                 stop_time = datetime.fromtimestamp(stop_time).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
-            family = run_info.item["attributes"]["structure_family"]
+            family = run_container.item["attributes"]["structure_family"]
 
             if family == StructureFamily.container:
                 # Change the icon for BlueskyRuns so it doesn't look like
@@ -363,7 +367,12 @@ class QTiledWidget(QWidget):
     def populate_data_channel_table(self, child_node):
         # For now, always select data from the primary stream
         # TODO: make stream configurable here
-        channel_list = self.model.client[child_node]["primary", "data"].keys()
+        run_container = self.model.client[child_node]
+        try:
+            # Backward compatibility with MongoDB data structure
+            channel_list = run_container.v2["primary", "data"].keys()
+        except KeyError as e:
+            raise ValueError(f"{child_node} is not a Bluesky run.") from e
         
         self.data_channel_table.clear_table()
         self.data_channel_table.build_table(channel_list)

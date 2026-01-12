@@ -162,8 +162,6 @@ class QSourceSelector(qt.QWidget):
         for spec in specs:
             if spec["name"] == "CatalogOfBlueskyRuns":
                 return True
-            else:
-                pass
         return False
 
     def tiledConnection(self):
