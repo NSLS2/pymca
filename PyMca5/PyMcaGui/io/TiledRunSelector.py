@@ -169,8 +169,13 @@ class TiledRunSelector(object):
         for spec in specs:
             if spec["name"] == "CatalogOfBlueskyRuns":
                 return True
-            else:
-                pass
+        return False
+
+    def is_bluesky_run(self, node):
+        specs = node.item["attributes"]["specs"]
+        for spec in specs:
+            if spec["name"] == "BlueskyRun":
+                return True
         return False
 
     def on_item_selected(self, child_node_path):
